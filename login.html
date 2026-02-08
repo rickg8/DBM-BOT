@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DBM Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #5865F2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .discord-btn {
+            background: #5865F2;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.3s;
+        }
+
+        .discord-btn:hover {
+            background: #4752C4;
+        }
+
+        .info {
+            background: #f0f0f0;
+            border-left: 4px solid #5865F2;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .info h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .info p {
+            margin: 5px 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #5865F2;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🎖️</div>
+        <h1>DBM Dashboard</h1>
+        <p class="subtitle">Controle de Protocolos de Patrulha</p>
+
+        <div class="error" id="error-msg"></div>
+
+        <button class="discord-btn" id="discord-login-btn" onclick="loginWithDiscord()">
+            <span>💜</span> Entrar com Discord
+        </button>
+
+        <div class="loading" id="loading">
+            Redirecionando para Discord...
+        </div>
+
+        <div class="info">
+            <h3>ℹ️ Informações</h3>
+            <p><strong>👨‍💼 Comandantes:</strong> Richard e Breno têm acesso total</p>
+            <p><strong>👥 Membros:</strong> Podem visualizar e criar protocolos</p>
+        </div>
+    </div>
+
+    <script>
+        // Funcionalidade de login com Discord
+        async function loginWithDiscord() {
+            // Para testes locais, vamos usar um login simplificado
+            // Em produção, você usaria o Discord OAuth2
+            
+            const discordId = prompt('Insira seu ID do Discord (para desenvolvimento):');
+            if (!discordId) return;
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/v1/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        discordId,
+                        username: `User ${discordId}`,
+                        avatar: 'https://cdn.discordapp.com/embed/avatars/0.png'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Salva o token
+                    localStorage.setItem('auth_token', data.token);
+                    // Redireciona para o dashboard
+                    window.location.href = '/index.html?token=' + data.token;
+                } else {
+                    showError(data.error || 'Erro ao fazer login');
+                }
+            } catch (err) {
+                showError('Erro ao conectar com o servidor: ' + err.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('discord-login-btn').disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('discord-login-btn').disabled = false;
+        }
+
+        function showError(msg) {
+            const errorDiv = document.getElementById('error-msg');
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+        }
+
+        // Verificar se já tem token
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                window.location.href = '/index.html?token=' + token;
+            }
+        });
+    </script>
+</body>
+</html>

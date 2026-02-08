@@ -229,13 +229,17 @@ async function sendWelcomeMessage(userId, username, roleType = 'elite') {
     }
 }
 
-// Middleware de autenticação por Discord ID
-function verifyDiscordAuth(req, res, next) {
-    const discordId = req.headers['x-discord-id'];
-    if (!discordId || !ADMIN_IDS.includes(discordId)) {
-        return res.status(403).json({ error: 'Acesso Negado', code: 'FORBIDDEN' });
-    }
-    next();
+// ===== REQUIRE AUTENTICAÇÃO =====
+const auth = require('./auth');
+
+// Função auxiliar para middleware de autenticação para rotas importantes
+function requireAuth(req, res, next) {
+    auth.authMiddleware(req, res, next);
+}
+
+// Função auxiliar para middleware de admin
+function requireAdmin(req, res, next) {
+    auth.adminMiddleware(req, res, next);
 }
 
 api.get('/pilotos', (req, res) => {
@@ -263,7 +267,7 @@ api.get('/status', (req, res) => {
     res.json(statuses);
 });
 
-api.put('/protocolos/:id', verifyDiscordAuth, (req, res) => {
+api.put('/protocolos/:id', requireAdmin, (req, res) => {
     const { id } = req.params;
     const { piloto, veiculo, data, inicio, fim, link, status } = req.body || {};
 
@@ -350,7 +354,7 @@ api.post('/protocolos', (req, res) => {
     res.status(201).json(created);
 });
 
-api.delete('/protocolos/:id', verifyDiscordAuth, (req, res) => {
+api.delete('/protocolos/:id', requireAdmin, (req, res) => {
     const { id } = req.params;
     const del = db.prepare('DELETE FROM protocolos WHERE id = ?').run(id);
     if (del.changes === 0) return res.status(404).json({ message: 'Registro não encontrado.' });
@@ -391,6 +395,69 @@ api.put('/protocolos/:id/finalizar', (req, res) => {
     res.json(updated);
 });
 
+// ===== AUTENTICAÇÃO =====
+
+// Endpoint de login via Discord
+api.post('/login', (req, res) => {
+    const { discordId, username, avatar } = req.body;
+
+    if (!discordId) {
+        return res.status(400).json({ error: 'Discord ID é obrigatório' });
+    }
+
+    // Criar objeto de usuário
+    const user = {
+        id: discordId,
+        username: username || 'Unknown',
+        avatar: avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'
+    };
+
+    // Gerar token JWT
+    const token = auth.generateToken(user);
+
+    res.json({
+        message: 'Login realizado com sucesso',
+        token,
+        user: {
+            id: user.id,
+            username: user.username,
+            role: auth.getUserRole(user.id),
+            isAdmin: auth.ADMIN_IDS.includes(user.id)
+        }
+    });
+});
+
+// Endpoint de logout
+api.post('/logout', auth.authMiddleware, (req, res) => {
+    res.json({ message: 'Logout realizado com sucesso' });
+});
+
+// Endpoint para verificar autenticação e obter dados do usuário
+api.get('/me', auth.authMiddleware, (req, res) => {
+    res.json({
+        user: {
+            id: req.user.id,
+            username: req.user.username,
+            role: req.user.role,
+            isAdmin: req.user.role === auth.ROLES.ADMIN
+        }
+    });
+});
+
+// Endpoint protegido - apenas admins podem acessar
+api.get('/admin/status', auth.adminMiddleware, (req, res) => {
+    const stats = {
+        totalProtocolos: db.prepare('SELECT COUNT(*) as count FROM protocolos').get().count,
+        protocolosAbertos: db.prepare('SELECT COUNT(*) as count FROM protocolos WHERE status_id = ?').get(STATUS_ABERTO).count,
+        totalPilotos: db.prepare('SELECT COUNT(*) as count FROM pilotos').get().count,
+        ultimasAcoes: db.prepare(`
+            SELECT action, actor, created_at FROM protocolos_audit 
+            ORDER BY created_at DESC LIMIT 10
+        `).all()
+    };
+    res.json(stats);
+});
+
 api.use((req, res) => {
     res.status(404).json({ error: 'Not found', path: req.originalUrl });
 });
@@ -418,8 +485,8 @@ DISCORD_CLIENT.on('error', err => {
 });
 
 // ⚠️ ATENÇÃO BRENO: Insira o token do bot Discord aqui
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN || 'TOKEN_AQUI';
-if (DISCORD_TOKEN !== 'TOKEN_AQUI') {
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN || 'MTQ2OTg4MjUwMTQ3NTYwMjQ1Mw.Gi1tlz.np0wAaPK2i-_7EWpV_9LLG-9dYqfIjUbIERDBc';
+if (DISCORD_TOKEN && DISCORD_TOKEN !== '') {
     DISCORD_CLIENT.login(DISCORD_TOKEN).catch(err => {
         console.error('Falha ao conectar Discord bot:', err.message);
     });

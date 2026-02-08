@@ -1,0 +1,8 @@
+run = "npm start"
+entrypoint = "server.js"
+
+[env]
+NODE_ENV = "production"
+
+[packager]
+language = "nodejs"

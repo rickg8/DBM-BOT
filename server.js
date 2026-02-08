@@ -484,8 +484,8 @@ DISCORD_CLIENT.on('error', err => {
     console.error('Erro no cliente Discord:', err.message);
 });
 
-// ⚠️ ATENÇÃO BRENO: Insira o token do bot Discord aqui
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN || 'MTQ2OTg4MjUwMTQ3NTYwMjQ1Mw.Gi1tlz.np0wAaPK2i-_7EWpV_9LLG-9dYqfIjUbIERDBc';
+// ⚠️ ATENÇÃO: Insira o token do bot Discord via variável de ambiente DISCORD_TOKEN
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 if (DISCORD_TOKEN && DISCORD_TOKEN !== '') {
     DISCORD_CLIENT.login(DISCORD_TOKEN).catch(err => {
         console.error('Falha ao conectar Discord bot:', err.message);

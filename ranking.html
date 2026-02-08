@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DBM - Ranking</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="page-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">DBM</span>
+        <div>
+          <div class="brand-title">Evento de Patrulha</div>
+          <div class="brand-sub">Quem mais acumulou horas</div>
+        </div>
+      </div>
+      <nav class="topnav">
+        <a href="index.html">Protocolos</a>
+        <a class="active" href="ranking.html">Ranking</a>
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
+      <a class="pill" href="index.html">Registrar protocolo</a>
+    </header>
+
+    <main class="page-content">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Comparativo</p>
+          <h1>🏆 Ranking do Evento</h1>
+          <p class="lede">Veja os pilotos com mais horas acumuladas.</p>
+          <div class="hero-actions">
+            <a class="pill" href="dashboard.html">Abrir dashboard</a>
+            <a class="pill ghost" href="index.html">Registrar protocolo</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p class="muted">Atualizado</p>
+          <h3 class="hero-highlight">Ao vivo</h3>
+          <p class="muted">Dados carregados da API</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Ranking por horas</h2>
+          <p class="muted">Ordenado do maior para o menor</p>
+        </div>
+        <ol id="rankingList"></ol>
+      </section>
+    </main>
+
+    <script src="js/ranking.js"></script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "dbm-evento-backend",
+  "version": "1.0.0",
+  "description": "Backend simples para controle de horas do evento DBM",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.2",
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.2.4",
+    "express": "^4.19.2"
+  }
+}

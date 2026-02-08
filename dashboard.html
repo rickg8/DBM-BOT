@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DBM - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="page-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">DBM</span>
+        <div>
+          <div class="brand-title">Evento de Patrulha</div>
+          <div class="brand-sub">Monitoramento em tempo real</div>
+        </div>
+      </div>
+      <nav class="topnav">
+        <a href="index.html">Protocolos</a>
+        <a href="ranking.html">Ranking</a>
+        <a class="active" href="dashboard.html">Dashboard</a>
+      </nav>
+      <a class="pill" href="index.html">+ Registrar novo</a>
+    </header>
+
+    <main class="page-content">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Visão geral</p>
+          <h1>📊 Painel do evento</h1>
+          <p class="lede">
+            Acompanhe os protocolos, veja quem está mais ativo e monitore as
+            horas de patrulha em tempo real.
+          </p>
+          <div class="hero-actions">
+            <a class="pill" href="ranking.html">Ver ranking</a>
+            <a class="pill ghost" href="index.html">Registrar protocolo</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p class="muted">Status</p>
+          <h3 class="hero-highlight" id="heroTotal">–</h3>
+          <p class="muted">Protocolos lançados</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Resumo</h2>
+          <p class="muted">Totais rápidos do evento</p>
+        </div>
+        <div class="cards-grid" id="summaryCards"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Horas por dia</h2>
+          <p class="muted">Volume diário de horas registradas</p>
+        </div>
+        <div class="chart-bars" id="chartDays"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Top pilotos</h2>
+          <p class="muted">Quem mais contribuiu</p>
+        </div>
+        <table class="fancy-table">
+          <thead>
+            <tr>
+              <th>Piloto</th>
+              <th>Protocolos</th>
+              <th>Horas</th>
+              <th>Média</th>
+              <th>Último</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody id="topPilots"></tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Protocolos recentes</h2>
+          <p class="muted">Últimos lançamentos</p>
+        </div>
+        <table class="fancy-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Piloto</th>
+              <th>Duração</th>
+              <th>Veículo</th>
+              <th>Status</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody id="recentProtocols"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="js/dashboard.js"></script>
+  </body>
+</html>

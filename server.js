@@ -277,24 +277,46 @@ DISCORD_CLIENT.on('messageCreate', async (message) => {
             // Buscar todos os membros do servidor
             await guild.members.fetch();
 
-            let hierarchyText = '# 📋 Hierarquia DBM\n\n';
+            // Data e hora atual
+            const now = new Date();
+            const dataFormatada = now.toLocaleDateString('pt-BR');
+            const horaFormatada = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-            for (const roleData of hierarchyConfig.roles) {
+            let hierarchyText = '🛵 **Hierarquia DBM** 🛵\n';
+
+            // Listar cargos DBM
+            for (const roleData of hierarchyConfig.rolesDBM) {
                 const role = guild.roles.cache.get(roleData.id);
                 if (!role) continue;
 
                 const members = guild.members.cache.filter(m => m.roles.cache.has(roleData.id));
                 
+                // Mencionar o cargo e mostrar contagem
+                hierarchyText += `@${role.name}  (${members.size})\n`;
+                
+                // Listar membros (opcional, comente se não quiser mostrar nomes)
                 if (members.size > 0) {
-                    hierarchyText += `## ${roleData.emoji} ${role.name}\n`;
                     members.forEach(member => {
-                        hierarchyText += `- ${member.user.username}\n`;
+                        hierarchyText += `  • ${member.user.username}\n`;
                     });
-                    hierarchyText += '\n';
                 }
+                
+                hierarchyText += '\n';
             }
 
-            hierarchyText += `\n*Total de membros: ${guild.memberCount}*`;
+            hierarchyText += `*Total de membros: ${guild.memberCount}*\n`;
+            hierarchyText += `*Hierarquia atualizada em: ${dataFormatada} às ${horaFormatada}*\n\n`;
+
+            // Adicionar cargos autorizados
+            hierarchyText += '<:okblue:1341047758882082936> **Autorizados**\n';
+            
+            // GAF
+            const gafRoles = hierarchyConfig.authorized.gaf.map(r => `@${r.name}`).join('  ');
+            hierarchyText += `${gafRoles}\n\n`;
+            
+            // GOA
+            const goaRoles = hierarchyConfig.authorized.goa.map(r => `@${r.name}`).join('  ');
+            hierarchyText += `${goaRoles}`;
 
             // Enviar no canal
             await message.channel.send(hierarchyText);

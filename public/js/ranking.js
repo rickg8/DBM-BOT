@@ -28,14 +28,32 @@ function logout() {
     window.location.href = '/login.html';
 }
 
+// Função helper para fazer requisições autenticadas
+function authFetch(url, options = {}) {
+    const token = localStorage.getItem('auth_token');
+    
+    if (!token) {
+        console.error('[AUTH] Token não encontrado, redirecionando...');
+        window.location.href = '/login.html';
+        return Promise.reject(new Error('Não autenticado'));
+    }
+
+    const headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+
+    return fetch(url, { ...options, headers });
+}
+
 async function fetchPilotos() {
-    const res = await fetch("/api/v1/pilotos");
+    const res = await authFetch("/api/v1/pilotos");
     if (!res.ok) throw new Error("Falha ao carregar pilotos");
     return res.json();
 }
 
 async function fetchProtocols() {
-    const res = await fetch("/api/v1/protocolos");
+    const res = await authFetch("/api/v1/protocolos");
     if (!res.ok) throw new Error("Falha ao carregar protocolos");
     return res.json();
 }

@@ -8,39 +8,46 @@
  */
 
 module.exports = {
-    // Hierarquia (da mais alta para a mais baixa)
-    roles: [
+    // Hierarquia DBM (da mais alta para a mais baixa)
+    rolesDBM: [
         { 
-            id: '1368980327342542918', 
-            name: '👑 Fundador', 
-            emoji: '👑',
-            description: 'Fundador da organização'
+            id: '1368980593997594757',
+            name: '・Comandante『DBM』',
+            mention: true
         },
         { 
-            id: '1368980593997594757', 
-            name: '⭐ Comandante', 
-            emoji: '⭐',
-            description: 'Comando supremo da DBM'
+            id: '1368980687999991848',
+            name: '・SubComandante『DBM』',
+            mention: true
         },
         { 
-            id: '1368980687999991848', 
-            name: '🎖️ Sub-Comandante', 
-            emoji: '🎖️',
-            description: 'Auxiliam o comando'
+            id: '1368980735055585290',
+            name: '・Instrutor『DBM』',
+            mention: true
         },
         { 
-            id: '1368980735055585290', 
-            name: '🔰 Equipe DBM', 
-            emoji: '🔰',
-            description: 'Equipe operacional'
+            id: '1368980963752939661',
+            name: 'DBM ELITE',
+            mention: true
         },
         { 
-            id: '1368980963752939661', 
-            name: '🏍️ Piloto', 
-            emoji: '🏍️',
-            description: 'Pilotos ativos'
+            id: '1368981004219453641',
+            name: '・『EQP』DBM',
+            mention: true
         }
     ],
+
+    // Cargos autorizados de outras organizações
+    authorized: {
+        gaf: [
+            { id: 'ID_COMANDANTE_GAF', name: '・Comandante『GAF』' },
+            { id: 'ID_SUBCOMANDANTE_GAF', name: '・SubComandante『GAF』' }
+        ],
+        goa: [
+            { id: 'ID_COMANDANTE_GOA', name: '・Comandante『GOA』' },
+            { id: 'ID_SUBCOMANDANTE_GOA', name: '・SubComandante『GOA』' }
+        ]
+    },
 
     // Configurações do comando
     command: {

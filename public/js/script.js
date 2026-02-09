@@ -76,14 +76,33 @@ function logout() {
     window.location.href = '/login.html';
 }
 
+// Função helper para fazer requisições autenticadas
+function authFetch(url, options = {}) {
+    const token = localStorage.getItem('auth_token');
+    
+    if (!token) {
+        console.error('[AUTH] Token não encontrado, redirecionando...');
+        window.location.href = '/login.html';
+        return Promise.reject(new Error('Não autenticado'));
+    }
+
+    // Adicionar token no header Authorization
+    const headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+
+    return fetch(url, { ...options, headers });
+}
+
 async function fetchPilotos() {
-    const res = await fetch("/api/v1/pilotos");
+    const res = await authFetch("/api/v1/pilotos");
     if (!res.ok) throw new Error("Falha ao carregar pilotos");
     return res.json();
 }
 
 async function fetchVeiculos() {
-    const res = await fetch("/api/v1/veiculos");
+    const res = await authFetch("/api/v1/veiculos");
     if (!res.ok) throw new Error("Falha ao carregar veículos");
     const data = await res.json();
     cachedVeiculos = data;
@@ -91,7 +110,7 @@ async function fetchVeiculos() {
 }
 
 async function fetchProtocols() {
-    const res = await fetch("/api/v1/protocolos");
+    const res = await authFetch("/api/v1/protocolos");
     if (!res.ok) throw new Error("Falha ao carregar protocolos");
     return res.json();
 }
@@ -455,9 +474,9 @@ form.addEventListener("submit", async e => {
 
     try {
         if (drawerMode === 'finalize' && editingId) {
-            const res = await fetch(`/api/v1/protocolos/${editingId}/finalizar`, {
+            const res = await authFetch(`/api/v1/protocolos/${editingId}/finalizar`, {
                 method: "PUT",
-                headers: getAuthHeaders(),
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fim, status })
             });
             if (!res.ok) {
@@ -478,9 +497,9 @@ form.addEventListener("submit", async e => {
         const url = isEditing ? `/api/v1/protocolos/${editingId}` : "/api/v1/protocolos";
         const method = isEditing ? "PUT" : "POST";
 
-        const res = await fetch(url, {
+        const res = await authFetch(url, {
             method,
-            headers: getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ piloto, veiculo, link, data, inicio, fim: (status === 'ABERTO' || noDuration) ? null : (fim || null), status })
         });
 
@@ -514,9 +533,8 @@ document.addEventListener("click", async e => {
         const confirmed = await confirmDelete();
         if (!confirmed) return;
         try {
-            const res = await fetch(`/api/v1/protocolos/${id}`, {
-                method: "DELETE",
-                headers: getAuthHeaders()
+            const res = await authFetch(`/api/v1/protocolos/${id}`, {
+                method: "DELETE"
             });
             if (!res.ok) {
                 const { message } = await res.json();
@@ -643,9 +661,9 @@ editSave?.addEventListener("click", async () => {
     }
 
     try {
-        const res = await fetch(`/api/v1/protocolos/${editingId}`, {
+        const res = await authFetch(`/api/v1/protocolos/${editingId}`, {
             method: "PUT",
-            headers: getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 piloto: currentEditingPiloto,
                 veiculo,
@@ -733,9 +751,9 @@ finalizeConfirm?.addEventListener("click", async () => {
         return;
     }
     try {
-        const res = await fetch(`/api/v1/protocolos/${finalizingId}/finalizar`, {
+        const res = await authFetch(`/api/v1/protocolos/${finalizingId}/finalizar`, {
             method: "PUT",
-            headers: getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fim: fimVal })
         });
         if (!res.ok) {

@@ -1,8 +1,21 @@
 run = "npm start"
 entrypoint = "server.js"
 
+[nix]
+channel = "stable-22_11"
+
+[unitTest]
+language = "nodejs"
+
+[languages.javascript]
+pattern = "**/{*.js,*.jsx,*.ts,*.tsx}"
+
+[languages.javascript.languageServer]
+start = ["typescript-language-server", "--stdio"]
+
 [env]
 NODE_ENV = "production"
 
 [packager]
 language = "nodejs"
+ignoredPaths = ["**/node_modules"]

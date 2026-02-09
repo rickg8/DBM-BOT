@@ -329,5 +329,58 @@ DISCORD_CLIENT.on('messageCreate', async (message) => {
 });
 
 DISCORD_CLIENT.login(process.env.DISCORD_TOKEN).catch(e => console.error("Erro Bot:", e.message));
+const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
+// Configuração do comando /hierarquia
+const commands = [
+    new SlashCommandBuilder()
+        .setName('hierarquia')
+        .setDescription('Exibe a hierarquia atualizada do DBM')
+].map(command => command.toJSON());
+
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+
+// Registra o comando no Discord
+(async () => {
+    try {
+        console.log('Atualizando comandos de barra (/)');
+        await rest.put(
+            Routes.applicationCommands('1469882501475602453'), // Seu Client ID
+            { body: commands },
+        );
+        console.log('Comandos registrados com sucesso!');
+    } catch (error) {
+        console.error(error);
+    }
+})();
+
+// Escuta a interação do comando
+DISCORD_CLIENT.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    if (interaction.commandName === 'hierarquia') {
+        const dataAtual = new Date().toLocaleDateString('pt-BR');
+        const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        const mensagemHierarquia = `🛵 **Hierarquia DBM** 🛵
+<@&1324784566854221895> (1)
+<@554409578486431794>
+
+<@&1324784566854221895> (1)
+<@1324784566854221895>
+
+**Instrutores** (2)
+<@1736> | <@1332>
+
+**EQUIPE DBM** (21)
+@Stella, @FERNADINHO, @Magno, @Sueli, @Gutierrez... (e os outros)
+
+*Hierarquia atualizada em: ${dataAtual} às ${horaAtual}*
+
+<a:okblue:1341047758882082936> **Autorizados**
+@Comandante GAF | @SubComandante GOA`;
+
+        await interaction.reply(mensagemHierarquia);
+    }
+});
 app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));

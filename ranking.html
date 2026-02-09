@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <title>DBM - Ranking</title>
     <link rel="stylesheet" href="css/style.css" />
+    <script>
+      // Verificar autenticação ANTES de carregar a página
+      (function() {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          window.location.href = '/login.html';
+        }
+      })();
+    </script>
   </head>
   <body class="page-shell">
     <header class="topbar">

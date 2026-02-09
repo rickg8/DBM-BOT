@@ -234,5 +234,23 @@
     </div>
 
     <script src="js/script.js"></script>
+    <script>
+      // Captura o token da URL se existir (vindo do redirecionamento do Discord)
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      if (token) {
+        localStorage.setItem('auth_token', token);
+        document.cookie = `auth_token=${token}; path=/; max-age=604800; SameSite=Strict`;
+        window.history.replaceState({}, document.title, "/index.html");
+        console.log("Login realizado e token salvo!");
+      }
+
+      // Função de Logout
+      function logout() {
+        window.clearAuth();
+        window.location.href = 'login.html';
+      }
+    </script>
   </body>
 </html>

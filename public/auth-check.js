@@ -14,7 +14,9 @@ window.clearAuth = function() {
 
 (function() {
     // NÃO redirecionar da página de login
-    if (window.location.pathname === '/login.html' || window.location.pathname.endsWith('login.html')) {
+    if (window.location.pathname === '/login.html' || 
+        window.location.pathname.endsWith('login.html') ||
+        window.location.pathname === '/public/login.html') {
         console.log('[AUTH-CHECK] Estamos na página de login, pulando verificação');
         return;
     }
@@ -44,5 +46,21 @@ window.clearAuth = function() {
         window.location.href = '/login.html';
     } else {
         console.log('[AUTH-CHECK] ✅ Token válido encontrado, acesso permitido');
+        
+        // Decodificar JWT para extrair informações (sem validação de assinatura no client)
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            console.log('[AUTH-CHECK] Usuário:', payload.username, '| Role:', payload.role);
+            
+            // Salvar dados do usuário no localStorage se não existirem
+            if (!localStorage.getItem('user_id')) {
+                localStorage.setItem('user_id', payload.id);
+            }
+            if (!localStorage.getItem('user_role')) {
+                localStorage.setItem('user_role', payload.role);
+            }
+        } catch (err) {
+            console.warn('[AUTH-CHECK] Não foi possível decodificar o token:', err);
+        }
     }
 })();

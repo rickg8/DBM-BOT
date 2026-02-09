@@ -10,6 +10,12 @@ const PORT = process.env.PORT || 3001;
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'dbm.sqlite');
 
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+const db = new Database(DB_PATH);
+
 // Discord Bot Security Configuration
 const ADMIN_IDS = ['1324784566854221895', '554409578486431794']; // Richard e Breno
 const DISCORD_CLIENT = new Client({
@@ -20,14 +26,7 @@ const CHANNEL_IDS = {
     chatDBM: '1368981004219453641'
 };
 
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-const db = new Database(DB_PATH);
 const ONLY_VEHICLE = 'Yamara Tenere';
-
-// schema
 const migrations = `
 CREATE TABLE IF NOT EXISTS pilotos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

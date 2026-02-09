@@ -151,7 +151,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
     try {
-        console.log('Iniciando registro do comando /hierarquia');
+        console.log('Iniciando registro do comando /hierarquia dbm');
         await rest.put(
             Routes.applicationGuildCommands(
                 '1469882501475602453', // ID do bot

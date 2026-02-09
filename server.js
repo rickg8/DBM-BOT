@@ -152,7 +152,6 @@ if (vehicleExists === 0) {
 }
 
 app.use(express.json());
-app.use(express.static(__dirname));
 
 const api = express.Router();
 
@@ -463,6 +462,9 @@ api.use((req, res) => {
 
 app.use('/api/v1', api);
 app.use('/api', api);
+
+// Servir arquivos estáticos DEPOIS das rotas de API
+app.use(express.static(__dirname));
 
 // middleware de erros centralizado
 // eslint-disable-next-line no-unused-vars

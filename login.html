@@ -138,8 +138,14 @@
     </div>
 
     <script>
-        // Funcionalidade de login com Discord
-        async function loginWithDiscord() {
+        // Verificar autenticação na página de login
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('auth_token');
+            // Se tem token válido, redireciona para dashboard
+            if (token && token.trim() !== '' && token !== 'null' && token !== 'undefined') {
+                window.location.replace('/index.html');
+            }
+        });
             // Para testes locais, vamos usar um login simplificado
             // Em produção, você usaria o Discord OAuth2
             

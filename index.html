@@ -7,9 +7,20 @@
     <script>
       // Verificar autenticação ANTES de carregar a página
       (function() {
+        if (window.location.pathname.includes('login')) return; // Não redirecionar da página de login
+        
         const token = localStorage.getItem('auth_token');
+        
+        // Se não tem token, vai para login
         if (!token) {
-          window.location.href = '/login.html';
+          window.location.replace('/login.html');
+          return;
+        }
+        
+        // Verifica se o token é válido (não vazio/inválido)
+        if (token.trim() === '' || token === 'null' || token === 'undefined') {
+          localStorage.removeItem('auth_token');
+          window.location.replace('/login.html');
         }
       })();
     </script>

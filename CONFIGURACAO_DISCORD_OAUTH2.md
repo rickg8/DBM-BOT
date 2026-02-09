@@ -6,17 +6,17 @@ Você precisa configurar estas variáveis no seu arquivo `.env`:
 
 ```env
 # Discord Bot Token (para sincronizar protocolos)
-DISCORD_TOKEN=seu_token_do_bot_discord
+DISCORD_TOKEN=SEU_TOKEN_AQUI
 
 # Discord OAuth2 (para login via Discord)
-DISCORD_CLIENT_ID=seu_client_id_discord
-DISCORD_CLIENT_SECRET=seu_client_secret_discord
-DISCORD_GUILD_ID=1368980327342542918
+DISCORD_CLIENT_ID=SEU_CLIENT_ID_AQUI
+DISCORD_CLIENT_SECRET=SEU_CLIENT_SECRET_AQUI
+DISCORD_GUILD_ID=SEU_GUILD_ID_AQUI
 DISCORD_REDIRECT_URI=https://odd-deanne-richard7-d040cbf1.koyeb.app/api/v1/callback
 
 # JWT Secret (para autenticação)
-JWT_SECRET=seu_secret_jwt_super_seguro_aqui
-```
+JWT_SECRET=sua_chave_secreta_aqui
+
 
 ## Como Configurar o Discord OAuth2
 
@@ -32,7 +32,8 @@ JWT_SECRET=seu_secret_jwt_super_seguro_aqui
    ```
    https://odd-deanne-richard7-d040cbf1.koyeb.app/api/v1/callback
    ```
-   (ou substitua pela URL do seu servidor)
+   ⚠️ **IMPORTANTE:** Se estiver testando no seu PC, adicione também:
+   `http://localhost:3001/api/v1/callback`
 
 3. Copie o **Client ID** e **Client Secret**
 

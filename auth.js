@@ -88,7 +88,13 @@ function verifyToken(token) {
  * Middleware de autenticação - verifica se o token é válido
  */
 function authMiddleware(req, res, next) {
-    const token = req.headers.authorization?.split(' ')[1] || req.query.token;
+    let token = req.headers.authorization?.split(' ')[1] || req.query.token;
+    
+    // Se não achou no header, tenta pegar do cookie
+    if (!token && req.headers.cookie) {
+        const match = req.headers.cookie.match(/auth_token=([^;]+)/);
+        if (match) token = match[1];
+    }
     
     if (!token) {
         return res.status(401).json({ 

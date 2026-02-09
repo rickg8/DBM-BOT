@@ -94,7 +94,7 @@ git commit -m "feat: adicionar sincronização de protocolos Discord
 - Integração com server.js"
 
 # Adicionar remote (trocar USUARIO)
-git remote add origin https://github.com/USUARIO/DBM-main.git
+git remote add origin https://github.com/rickg8/DBM-BOT.git
 
 # Fazer push
 git push -u origin main

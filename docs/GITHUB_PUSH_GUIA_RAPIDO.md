@@ -63,7 +63,7 @@ Seu código agora está no GitHub! 🎉
 
 1. Acesse seu repositório:
    ```
-   https://github.com/seu_usuario/DBM-main
+   https://github.com/rickg8/DBM-BOT
    ```
 
 2. Veja o commit recém enviado
@@ -91,7 +91,7 @@ R: GitHub > Settings > Accounts > Sign In
 R: Certifique-se que selecionou a pasta CORRETA: `C:\Users\Richard\Desktop\DBM-main`
 
 **P: Onde vejo meu código depois?**
-R: https://github.com/seu_usuario/DBM-main
+R: https://github.com/rickg8/DBM-BOT
 
 ---
 

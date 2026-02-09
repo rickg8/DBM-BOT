@@ -47,7 +47,7 @@ git commit -m "feat: adicionar sincronização de protocolos do outro bot Discor
 - Integração com server.js"
 
 # Adicionar remote (se não tiver)
-git remote add origin https://github.com/seu_usuario/DBM-main.git
+git remote add origin https://github.com/rickg8/DBM-BOT.git
 
 # Fazer push
 git push -u origin main

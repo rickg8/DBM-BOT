@@ -8,7 +8,7 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
 // Configurações
 const OTHER_BOT_ID = '1410682630801854566';
-const CHANNEL_ID = '14589293188926669 22';
+const CHANNEL_ID = '1458929318892666922';
 const LOCAL_API_URL = process.env.API_URL || 'http://localhost:3001/api/v1';
 const SYNC_INTERVAL = 60000; // 1 minuto
 const SYNC_CLIENT = new Client({

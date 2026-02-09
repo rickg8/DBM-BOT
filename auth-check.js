@@ -13,6 +13,21 @@ window.clearAuth = function() {
 };
 
 (function() {
+    // 1. Capturar token da URL (retorno do Discord)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    
+    if (urlToken) {
+        console.log('[AUTH-CHECK] 🔑 Token recebido via URL, salvando...');
+        localStorage.setItem('auth_token', urlToken);
+        
+        // Salvar também no cookie para garantir que a API receba
+        document.cookie = `auth_token=${urlToken}; path=/; max-age=604800; SameSite=Lax`;
+
+        // Limpar a URL para não ficar expondo o token
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // NÃO redirecionar da página de login
     if (window.location.pathname === '/login.html' || 
         window.location.pathname.endsWith('login.html') ||

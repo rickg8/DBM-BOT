@@ -30,7 +30,7 @@ const DISCORD_CLIENT = new Client({
     ]
 });
 
-const ONLY_VEHICLE = 'Yamara Tenere';
+const ONLY_VEHICLE = 'Yamaha Tenere';
 
 // --- MIGRAÇÕES ---
 const migrations = `

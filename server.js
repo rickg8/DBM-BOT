@@ -105,6 +105,60 @@ if (db.prepare('SELECT COUNT(1) as total FROM veiculos WHERE nome = ?').get(ONLY
 
 app.use(express.json());
 const api = express.Router();
+// --- ROTAS DE LOGIN VIA DISCORD ---
+api.get('/login', (req, res) => {
+  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+  const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+
+  if (!CLIENT_ID) {
+    return res.status(500).send('DISCORD_CLIENT_ID não configurado');
+  }
+
+  const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
+  res.redirect(authUrl);
+});
+
+api.get('/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send('Código não fornecido');
+
+  try {
+    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+      client_id: process.env.DISCORD_CLIENT_ID,
+      client_secret: process.env.DISCORD_CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: process.env.DISCORD_REDIRECT_URI,
+      scope: 'identify guilds guilds.members.read'
+    }), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // Buscar dados do usuário no Discord
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const user = userResponse.data;
+
+    // Buscar cargos do usuário no servidor
+    const memberResponse = await axios.get(
+      `https://discord.com/api/users/@me/guilds/${process.env.DISCORD_GUILD_ID}/member`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const memberData = memberResponse.data;
+
+    // Gerar JWT com role
+    const jwtToken = require('./auth').generateToken(user, memberData.roles);
+
+    // Devolver token para o front
+    res.json({ token: jwtToken });
+  } catch (err) {
+    console.error('Erro no callback:', err.message);
+    res.status(500).send('Erro ao autenticar com Discord');
+  }
+});
 
 // --- FUNÇÕES ---
 function calculateDuration(date, start, end) {

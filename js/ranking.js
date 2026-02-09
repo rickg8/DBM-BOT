@@ -1,5 +1,33 @@
 const rankingList = document.getElementById("rankingList");
 
+// ===== AUTENTICAÇÃO =====
+function getAuthToken() {
+    return localStorage.getItem('auth_token');
+}
+
+function getAuthHeaders() {
+    const token = getAuthToken();
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
+function checkAuth() {
+    const token = getAuthToken();
+    if (!token) {
+        window.location.href = '/login.html';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login.html';
+}
+
 async function fetchPilotos() {
     const res = await fetch("/api/v1/pilotos");
     if (!res.ok) throw new Error("Falha ao carregar pilotos");
@@ -43,6 +71,9 @@ function renderRanking(protocols, pilotColors) {
 }
 
 async function init() {
+    // Verificar autenticação
+    checkAuth();
+    
     try {
         const [pilotos, protocols] = await Promise.all([fetchPilotos(), fetchProtocols()]);
         const pilotColors = pilotos.reduce((acc, { nome, cor }) => {

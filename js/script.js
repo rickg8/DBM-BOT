@@ -48,6 +48,34 @@ let finalizingId = null;
 let finalizingProtocol = null;
 const NON_COUNT_STATUSES = ['ADVERTENCIA', 'NAO PARTICIPANDO', 'INATIVO'];
 
+// ===== AUTENTICAÇÃO =====
+function getAuthToken() {
+    return localStorage.getItem('auth_token');
+}
+
+function getAuthHeaders() {
+    const token = getAuthToken();
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
+function checkAuth() {
+    const token = getAuthToken();
+    if (!token) {
+        window.location.href = '/login.html';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login.html';
+}
+
 async function fetchPilotos() {
     const res = await fetch("/api/v1/pilotos");
     if (!res.ok) throw new Error("Falha ao carregar pilotos");
@@ -410,7 +438,7 @@ form.addEventListener("submit", async e => {
         if (drawerMode === 'finalize' && editingId) {
             const res = await fetch(`/api/v1/protocolos/${editingId}/finalizar`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ fim, status })
             });
             if (!res.ok) {
@@ -433,7 +461,7 @@ form.addEventListener("submit", async e => {
 
         const res = await fetch(url, {
             method,
-            headers: { "Content-Type": "application/json" },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ piloto, veiculo, link, data, inicio, fim: (status === 'ABERTO' || noDuration) ? null : (fim || null), status })
         });
 
@@ -594,7 +622,7 @@ editSave?.addEventListener("click", async () => {
     try {
         const res = await fetch(`/api/v1/protocolos/${editingId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 piloto: currentEditingPiloto,
                 veiculo,
@@ -684,7 +712,7 @@ finalizeConfirm?.addEventListener("click", async () => {
     try {
         const res = await fetch(`/api/v1/protocolos/${finalizingId}/finalizar`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ fim: fimVal })
         });
         if (!res.ok) {
@@ -711,6 +739,9 @@ drawer?.addEventListener("click", e => {
 });
 
 async function init() {
+    // Verificar autenticação
+    checkAuth();
+    
     try {
         const [pilotos, veiculos] = await Promise.all([fetchPilotos(), fetchVeiculos()]);
         renderPilotos(pilotos);

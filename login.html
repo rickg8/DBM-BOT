@@ -209,7 +209,11 @@
             loadingDiv.style.display = 'block';
 
             try {
-                const response = await fetch('/api/v1/login', {
+                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? `http://localhost:3001/api/v1/login`
+                    : `/api/v1/login`;
+                
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

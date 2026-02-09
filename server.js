@@ -8,6 +8,17 @@ const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const DATA_DIR = path.join(__dirname, 'data');
+
+// Enable CORS para aceitar requisições de outras portas durante desenvolvimento
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 const DB_PATH = path.join(DATA_DIR, 'dbm.sqlite');
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -152,6 +163,11 @@ if (vehicleExists === 0) {
 }
 
 app.use(express.json());
+
+// Endpoint de teste de saúde
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 const api = express.Router();
 

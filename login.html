@@ -227,10 +227,15 @@
                     throw new Error(data.error || 'Erro ao fazer login');
                 }
 
-                // Salvar token
+                // Salvar token em localStorage E em cookie
                 localStorage.setItem('auth_token', data.token);
                 localStorage.setItem('user_id', data.user.id);
                 localStorage.setItem('user_role', data.user.role);
+                
+                // Também salvar em cookie (mais seguro, enviado automaticamente)
+                document.cookie = `auth_token=${data.token}; path=/; max-age=604800; SameSite=Strict`;
+                document.cookie = `user_id=${data.user.id}; path=/; max-age=604800; SameSite=Strict`;
+                document.cookie = `user_role=${data.user.role}; path=/; max-age=604800; SameSite=Strict`;
 
                 showSuccess('Login realizado! Redirecionando...');
                 

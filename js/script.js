@@ -72,7 +72,7 @@ function checkAuth() {
 }
 
 function logout() {
-    localStorage.removeItem('auth_token');
+    window.clearAuth();
     window.location.href = '/login.html';
 }
 

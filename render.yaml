@@ -1,0 +1,17 @@
+# Render deployment configuration
+services:
+  - type: web
+    name: dbm-bot
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+  
+  - type: pserv
+    name: dbm-postgres
+    env: postgres
+    plan: free
+    ipAllowList: []

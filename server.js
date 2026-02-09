@@ -250,7 +250,7 @@ api.get('/callback', async (req, res) => {
 api.get('/pilotos', (req, res) => res.json(db.prepare('SELECT id, nome, cor FROM pilotos ORDER BY nome ASC').all()));
 api.get('/veiculos', (req, res) => res.json(db.prepare('SELECT id, nome FROM veiculos ORDER BY nome ASC').all()));
 
-app.use('/api', api);
+app.use('/api/v1', api);
 app.use(express.static(PUBLIC_DIR));
 
 // Inicialização do Bot

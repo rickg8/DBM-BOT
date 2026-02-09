@@ -6,6 +6,7 @@ const Database = require('better-sqlite3');
 const axios = require('axios'); // Para o OAuth2
 const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
 const auth = require('./auth');
+const hierarchyConfig = require('./hierarchy-config');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -276,18 +277,9 @@ DISCORD_CLIENT.on('messageCreate', async (message) => {
             // Buscar todos os membros do servidor
             await guild.members.fetch();
 
-            // IDs dos cargos importantes (da hierarquia mais alta para a mais baixa)
-            const rolesHierarchy = [
-                { id: '1368980327342542918', name: '👑 Fundador', emoji: '👑' },
-                { id: '1368980593997594757', name: '⭐ Comandante', emoji: '⭐' },
-                { id: '1368980687999991848', name: '🎖️ Sub-Comandante', emoji: '🎖️' },
-                { id: '1368980735055585290', name: '🔰 Equipe DBM', emoji: '🔰' },
-                { id: '1368980963752939661', name: '🏍️ Piloto', emoji: '🏍️' }
-            ];
-
             let hierarchyText = '# 📋 Hierarquia DBM\n\n';
 
-            for (const roleData of rolesHierarchy) {
+            for (const roleData of hierarchyConfig.roles) {
                 const role = guild.roles.cache.get(roleData.id);
                 if (!role) continue;
 

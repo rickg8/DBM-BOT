@@ -4,9 +4,12 @@
     <meta charset="UTF-8" />
     <title>DBM - Evento de Patrulha</title>
     <script src="/auth-check.js"></script>
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
   </head>
-  <body class="page-shell">
+  <body class="page-shell index-page">
     <header class="topbar">
       <div class="brand">
         <span class="brand-mark">DBM</span>
@@ -23,7 +26,13 @@
       <div class="top-actions">
         <span class="pill badge" id="openBadge">Abertos: 0</span>
         <a class="pill" href="dashboard.html">Ver painel</a>
-        <button class="pill" onclick="logout()" style="background: #e74c3c; border: none; cursor: pointer;">🚪 Logout</button>
+        <button
+          class="pill"
+          onclick="logout()"
+          style="background: #e74c3c; border: none; cursor: pointer"
+        >
+          🚪 Logout
+        </button>
       </div>
     </header>
 
@@ -35,8 +44,6 @@
             src="assets/imgs/YamahaTenere.png"
             alt="Yamaha Tenere"
             class="hero-image"
-            width="20"
-            height="20"
           />
           <h1>Controle de Horas do Evento</h1>
           <p class="lede">

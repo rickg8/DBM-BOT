@@ -8,6 +8,7 @@ const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const DATA_DIR = path.join(__dirname, 'data');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 const DB_PATH = path.join(DATA_DIR, 'dbm.sqlite');
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -219,7 +220,7 @@ async function sendWelcomeMessage(userId, username, roleType = 'elite') {
         if (!DISCORD_CLIENT.isReady()) return;
         const channel = await DISCORD_CLIENT.channels.fetch(CHANNEL_IDS.chatDBM);
         if (channel.type !== ChannelType.GuildText) return;
-        
+
         const message = `🎖️ **BEM-VINDO À EQUIPE!** Parabéns por integrar o corpo de patrulha do DBM!\n\n<@${userId}> foi promovido(a) para a equipe de ${roleType === 'elite' ? 'Elite' : 'Equipe'}.`;
         await channel.send(message);
     } catch (err) {
@@ -464,7 +465,7 @@ app.use('/api/v1', api);
 app.use('/api', api);
 
 // Servir arquivos estáticos DEPOIS das rotas de API
-app.use(express.static(__dirname));
+app.use(express.static(PUBLIC_DIR));
 
 // middleware de erros centralizado
 // eslint-disable-next-line no-unused-vars

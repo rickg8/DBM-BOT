@@ -197,7 +197,7 @@ function renderRecent(protocols, pilotColors) {
 async function init() {
     // Verificar autenticação
     checkAuth();
-    
+
     try {
         const [pilotos, protocols] = await Promise.all([fetchPilotos(), fetchProtocols()]);
         const pilotColors = pilotos.reduce((acc, { nome, cor }) => {

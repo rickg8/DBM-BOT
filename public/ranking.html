@@ -4,9 +4,11 @@
     <meta charset="UTF-8" />
     <title>DBM - Ranking</title>
     <script src="/auth-check.js"></script>
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/ranking.css" />
+    <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
   </head>
-  <body class="page-shell">
+  <body class="page-shell ranking-page">
     <header class="topbar">
       <div class="brand">
         <span class="brand-mark">DBM</span>
@@ -20,9 +22,15 @@
         <a class="active" href="ranking.html">Ranking</a>
         <a href="dashboard.html">Dashboard</a>
       </nav>
-      <div style="display: flex; gap: 10px;">
+      <div style="display: flex; gap: 10px">
         <a class="pill" href="index.html">Registrar protocolo</a>
-        <button class="pill" onclick="logout()" style="background: #e74c3c; border: none; cursor: pointer;">🚪 Logout</button>
+        <button
+          class="pill"
+          onclick="logout()"
+          style="background: #e74c3c; border: none; cursor: pointer"
+        >
+          🚪 Logout
+        </button>
       </div>
     </header>
 

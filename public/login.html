@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - DBM Dashboard</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/login.css" />
+    <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
+  </head>
+  <body class="login-page">
+    <div class="login-card">
+      <div class="login-logo">🎖️</div>
+      <div class="login-brand">
+        <span class="brand-mark">DBM</span>
+        <div>
+          <h1 class="login-title">DBM Dashboard</h1>
+          <p class="login-subtitle">Controle de Protocolos de Patrulha</p>
+        </div>
+      </div>
+
+      <p class="login-hint">
+        Use o ID numérico do Discord (ative o modo desenvolvedor e copie o ID do
+        usuário).
+      </p>
+      <div class="login-meta">
+        <small>Sem senha: só ID</small>
+        <small>Token válido por 7 dias</small>
+      </div>
+
+      <div class="alert error" id="error-msg"></div>
+      <div class="alert success" id="success-msg"></div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="input-group">
+          <label for="discordId" class="label">Discord ID</label>
+          <input
+            type="text"
+            id="discordId"
+            placeholder="Apenas números"
+            required
+            autocomplete="off"
+            class="login-input"
+          />
+        </div>
+        <button type="submit" class="login-btn" id="loginBtn">
+          🔐 Entrar com Discord
+        </button>
+      </form>
+
+      <div class="loading" id="loading">
+        <p>Conectando...</p>
+      </div>
+
+      <div class="login-info">
+        <h3>👨‍💼 Comandantes DBM</h3>
+        <p><strong>ID:</strong> 1324784566854221895</p>
+        <p><strong>Acesso:</strong> Total</p>
+        <div class="divider"></div>
+        <h3>👥 Outros Membros</h3>
+        <p><strong>Acesso:</strong> Visualizar e criar protocolos</p>
+      </div>
+    </div>
+
+    <script>
+      // Verificar se já está logado
+      document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("auth_token");
+        if (token && token !== "null" && token !== "") {
+          // Se já tem token, redireciona para dashboard
+          window.location.replace("/index.html");
+        }
+      });
+
+      async function handleLogin(event) {
+        event.preventDefault();
+
+        const discordId = document.getElementById("discordId").value.trim();
+        const loginBtn = document.getElementById("loginBtn");
+        const errorDiv = document.getElementById("error-msg");
+        const successDiv = document.getElementById("success-msg");
+        const loadingDiv = document.getElementById("loading");
+
+        // Limpar mensagens
+        errorDiv.style.display = "none";
+        successDiv.style.display = "none";
+
+        // Validar ID
+        if (!discordId || discordId === "") {
+          showError("Por favor, insira seu Discord ID");
+          return;
+        }
+
+        if (!isValidDiscordId(discordId)) {
+          showError("Discord ID deve conter apenas números");
+          return;
+        }
+
+        // Desabilitar botão
+        loginBtn.disabled = true;
+        loadingDiv.style.display = "block";
+
+        try {
+          const response = await fetch("/api/v1/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              discordId: discordId,
+              username: `User_${discordId}`,
+              avatar: "https://cdn.discordapp.com/embed/avatars/0.png",
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Erro ao fazer login");
+          }
+
+          // Salvar token em localStorage E em cookie
+          localStorage.setItem("auth_token", data.token);
+          localStorage.setItem("user_id", data.user.id);
+          localStorage.setItem("user_role", data.user.role);
+
+          // Também salvar em cookie (mais seguro, enviado automaticamente)
+          document.cookie = `auth_token=${data.token}; path=/; max-age=604800; SameSite=Strict`;
+          document.cookie = `user_id=${data.user.id}; path=/; max-age=604800; SameSite=Strict`;
+          document.cookie = `user_role=${data.user.role}; path=/; max-age=604800; SameSite=Strict`;
+
+          showSuccess("Login realizado! Redirecionando...");
+
+          // Redirecionar após 1 segundo
+          setTimeout(() => {
+            window.location.replace("/index.html");
+          }, 1000);
+        } catch (err) {
+          showError(err.message || "Erro ao conectar com o servidor");
+          console.error("Login error:", err);
+        } finally {
+          loginBtn.disabled = false;
+          loadingDiv.style.display = "none";
+        }
+      }
+
+      function isValidDiscordId(id) {
+        return /^\d+$/.test(id);
+      }
+
+      function showError(msg) {
+        const errorDiv = document.getElementById("error-msg");
+        errorDiv.textContent = msg;
+        errorDiv.style.display = "block";
+      }
+
+      function showSuccess(msg) {
+        const successDiv = document.getElementById("success-msg");
+        successDiv.textContent = msg;
+        successDiv.style.display = "block";
+      }
+    </script>
+  </body>
+</html>

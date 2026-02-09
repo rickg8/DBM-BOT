@@ -1,0 +1,16 @@
+/* Estilos específicos da página de Ranking */
+#rankingList {
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.ranking-page .hero-card {
+  align-self: center;
+}
+
+@media (max-width: 900px) {
+  #rankingList {
+    padding-left: 0;
+  }
+}

@@ -181,22 +181,41 @@ function renderDiscordLink(link) {
             </a>`;
 }
 
-const toastStack = (() => {
-    const el = document.createElement('div');
-    el.className = 'toast-stack';
-    document.body.appendChild(el);
-    return el;
-})();
-
 function notify(message, type = 'info') {
-    if (!toastStack) return alert(message);
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    toastStack.appendChild(toast);
-    setTimeout(() => {
-        toast.remove();
-    }, 3200);
+    if (window.Swal) {
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2800,
+            timerProgressBar: true,
+            customClass: { popup: 'swal-toast' }
+        });
+        toast.fire({
+            icon: type === 'error' ? 'error' : type === 'success' ? 'success' : 'info',
+            title: message
+        });
+        return;
+    }
+    alert(message);
+}
+
+async function confirmDelete() {
+    if (window.Swal) {
+        const result = await Swal.fire({
+            title: 'Apagar protocolo?',
+            text: 'Esta ação não pode ser desfeita.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Apagar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#4b5563',
+            reverseButtons: true,
+        });
+        return result.isConfirmed;
+    }
+    return confirm('Apagar este protocolo?');
 }
 
 function statusTitle(p) {
@@ -492,9 +511,13 @@ document.addEventListener("click", async e => {
     const action = btn.getAttribute("data-action");
 
     if (action === "delete") {
-        if (!confirm("Apagar este protocolo?")) return;
+        const confirmed = await confirmDelete();
+        if (!confirmed) return;
         try {
-            const res = await fetch(`/api/v1/protocolos/${id}`, { method: "DELETE" });
+            const res = await fetch(`/api/v1/protocolos/${id}`, {
+                method: "DELETE",
+                headers: getAuthHeaders()
+            });
             if (!res.ok) {
                 const { message } = await res.json();
                 throw new Error(message || "Erro ao apagar");
@@ -741,7 +764,7 @@ drawer?.addEventListener("click", e => {
 async function init() {
     // Verificar autenticação
     checkAuth();
-    
+
     try {
         const [pilotos, veiculos] = await Promise.all([fetchPilotos(), fetchVeiculos()]);
         renderPilotos(pilotos);

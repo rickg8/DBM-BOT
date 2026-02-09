@@ -95,7 +95,7 @@ const STATUS_FINALIZADO = getStatusId('FINALIZADO');
 const STATUS_ADVERTENCIA = getStatusId('ADVERTENCIA');
 const STATUS_NAO_PARTICIPANDO = getStatusId('NAO PARTICIPANDO');
 const STATUS_INATIVO = getStatusId('INATIVO');
-const STATUS_NO_DURATION = new Set([STATUS_ADVERTENCIA, STATUS_NAO_PARTICIPANDO, STATUS_INATIVO]);
+const STATUS_NO_DURATION = new Set([STATUS_ADERTENCIA, STATUS_NAO_PARTICIPANDO, STATUS_INATIVO]);
 
 // Garante veículo único
 db.prepare('DELETE FROM veiculos WHERE nome != ?').run(ONLY_VEHICLE);
@@ -105,6 +105,7 @@ if (db.prepare('SELECT COUNT(1) as total FROM veiculos WHERE nome = ?').get(ONLY
 
 app.use(express.json());
 const api = express.Router();
+
 // --- ROTAS DE LOGIN VIA DISCORD ---
 api.get('/login', (req, res) => {
   const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
@@ -160,76 +161,7 @@ api.get('/callback', async (req, res) => {
   }
 });
 
-// --- FUNÇÕES ---
-function calculateDuration(date, start, end) {
-    const startTime = new Date(`${date}T${start}`);
-    let endTime = new Date(`${date}T${end}`);
-    if (endTime < startTime) endTime.setDate(endTime.getDate() + 1);
-    return Math.floor((endTime - startTime) / 1000);
-}
-
-function audit(protocoloId, action, payload = {}, actor = 'api') {
-    try {
-        const insertAudit = db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)');
-        insertAudit.run(protocoloId, action, actor, JSON.stringify(payload));
-    } catch (err) { console.error('Falha ao gravar auditoria', err.message); }
-}
-// --- ROTAS DE LOGIN VIA DISCORD ---
-api.get('/login', (req, res) => {
-  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
-  const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-
-  if (!CLIENT_ID) {
-    return res.status(500).send('DISCORD_CLIENT_ID não configurado');
-  }
-
-  const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
-  res.redirect(authUrl);
-});
-
-api.get('/callback', async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.status(400).send('Código não fornecido');
-
-  try {
-    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
-      client_id: process.env.DISCORD_CLIENT_ID,
-      client_secret: process.env.DISCORD_CLIENT_SECRET,
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: process.env.DISCORD_REDIRECT_URI,
-      scope: 'identify guilds guilds.members.read'
-    }), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
-
-    const accessToken = tokenResponse.data.access_token;
-
-    // Buscar dados do usuário no Discord
-    const userResponse = await axios.get('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    const user = userResponse.data;
-
-    // Buscar cargos do usuário no servidor
-    const memberResponse = await axios.get(
-      `https://discord.com/api/users/@me/guilds/${process.env.DISCORD_GUILD_ID}/member`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    const memberData = memberResponse.data;
-
-    // Gerar JWT com role
-    const jwtToken = require('./auth').generateToken(user, memberData.roles);
-
-    // Devolver token para o front
-    res.json({ token: jwtToken });
-  } catch (err) {
-    console.error('Erro no callback:', err.message);
-    res.status(500).send('Erro ao autenticar com Discord');
-  }
-});
-
-// --- ROTAS ---
+// --- ROTAS DE PROTOCOLOS ---
 api.get('/protocolos', auth.authMiddleware, (req, res) => {
     const protocolos = db.prepare(`
         SELECT p.id, p.piloto, p.veiculo, p.link, p.data, p.inicio, p.fim, p.duracao, p.status_id, s.nome as status, p.created_at
@@ -262,8 +194,8 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
         console.log('Iniciando registro do comando /hierarquia dbm');
         await rest.put(
             Routes.applicationGuildCommands(
-                '1469882501475602453', // ID do bot
-                process.env.DISCORD_GUILD_ID // ID do servidor
+                process.env.DISCORD_CLIENT_ID, // ID do bot
+                process.env.DISCORD_GUILD_ID   // ID do servidor
             ),
             { body: commands },
         );
@@ -308,10 +240,8 @@ DISCORD_CLIENT.on('interactionCreate', async interaction => {
 
 // Login do bot
 DISCORD_CLIENT.login(process.env.DISCORD_TOKEN).catch(e => console.error("Erro Bot:", e.message));
+
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
-}); 
-
-app.use('/api/v1', api);
-
+});

@@ -3,25 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>DBM - Ranking</title>
+    <script src="/auth-check.js"></script>
     <link rel="stylesheet" href="css/style.css" />
-    <script>
-      // Verificar autenticação ANTES de carregar a página
-      (function() {
-        if (window.location.pathname.includes('login')) return;
-        
-        const token = localStorage.getItem('auth_token');
-        
-        if (!token) {
-          window.location.replace('/login.html');
-          return;
-        }
-        
-        if (token.trim() === '' || token === 'null' || token === 'undefined') {
-          localStorage.removeItem('auth_token');
-          window.location.replace('/login.html');
-        }
-      })();
-    </script>
   </head>
   <body class="page-shell">
     <header class="topbar">

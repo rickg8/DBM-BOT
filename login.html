@@ -23,24 +23,16 @@
         .login-container {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 50px 40px;
             width: 100%;
             max-width: 400px;
             text-align: center;
         }
 
         .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: #5865F2;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 40px;
+            font-size: 50px;
+            margin-bottom: 20px;
         }
 
         h1 {
@@ -55,30 +47,68 @@
             font-size: 14px;
         }
 
-        .discord-btn {
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #5865F2;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
             background: #5865F2;
             color: white;
             border: none;
-            padding: 12px 30px;
             border-radius: 5px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            width: 100%;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
             transition: background 0.3s;
         }
 
-        .discord-btn:hover {
+        .login-btn:hover {
             background: #4752C4;
         }
 
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .success {
+            color: #27ae60;
+            background: #d5f4e6;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #27ae60;
+        }
+
         .info {
-            background: #f0f0f0;
+            background: #ecf0f1;
             border-left: 4px solid #5865F2;
             padding: 15px;
             border-radius: 5px;
@@ -99,18 +129,6 @@
 
         .loading {
             display: none;
-            text-align: center;
-            color: #5865F2;
-            font-weight: bold;
-        }
-
-        .error {
-            color: #e74c3c;
-            background: #fadbd8;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: none;
         }
     </style>
 </head>
@@ -121,38 +139,74 @@
         <p class="subtitle">Controle de Protocolos de Patrulha</p>
 
         <div class="error" id="error-msg"></div>
+        <div class="success" id="success-msg"></div>
 
-        <button class="discord-btn" id="discord-login-btn" onclick="loginWithDiscord()">
-            <span>💜</span> Entrar com Discord
-        </button>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="discordId" 
+                    placeholder="Seu Discord ID (número)" 
+                    required
+                    autocomplete="off"
+                >
+            </div>
+            <button type="submit" class="login-btn" id="loginBtn">
+                🔐 Entrar com Discord
+            </button>
+        </form>
 
         <div class="loading" id="loading">
-            Redirecionando para Discord...
+            <p>Conectando...</p>
         </div>
 
         <div class="info">
-            <h3>ℹ️ Informações</h3>
-            <p><strong>👨‍💼 Comandantes:</strong> Richard e Breno têm acesso total</p>
-            <p><strong>👥 Membros:</strong> Podem visualizar e criar protocolos</p>
+            <h3>👨‍💼 Comandantes DBM</h3>
+            <p><strong>ID:</strong> 1324784566854221895</p>
+            <p><strong>Acesso:</strong> Total</p>
+            <hr style="margin: 10px 0; border: none; border-top: 1px solid #bbb;">
+            <h3>👥 Outros Membros</h3>
+            <p><strong>Acesso:</strong> Visualizar e criar protocolos</p>
         </div>
     </div>
 
     <script>
-        // Verificar autenticação na página de login
-        window.addEventListener('load', () => {
+        // Verificar se já está logado
+        document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('auth_token');
-            // Se tem token válido, redireciona para dashboard
-            if (token && token.trim() !== '' && token !== 'null' && token !== 'undefined') {
+            if (token && token !== 'null' && token !== '') {
+                // Se já tem token, redireciona para dashboard
                 window.location.replace('/index.html');
             }
         });
-            // Para testes locais, vamos usar um login simplificado
-            // Em produção, você usaria o Discord OAuth2
-            
-            const discordId = prompt('Insira seu ID do Discord (para desenvolvimento):');
-            if (!discordId) return;
 
-            showLoading();
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const discordId = document.getElementById('discordId').value.trim();
+            const loginBtn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('error-msg');
+            const successDiv = document.getElementById('success-msg');
+            const loadingDiv = document.getElementById('loading');
+
+            // Limpar mensagens
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            // Validar ID
+            if (!discordId || discordId === '') {
+                showError('Por favor, insira seu Discord ID');
+                return;
+            }
+
+            if (!isValidDiscordId(discordId)) {
+                showError('Discord ID deve conter apenas números');
+                return;
+            }
+
+            // Desabilitar botão
+            loginBtn.disabled = true;
+            loadingDiv.style.display = 'block';
 
             try {
                 const response = await fetch('/api/v1/login', {
@@ -160,38 +214,42 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        discordId,
-                        username: `User ${discordId}`,
+                    body: JSON.stringify({
+                        discordId: discordId,
+                        username: `User_${discordId}`,
                         avatar: 'https://cdn.discordapp.com/embed/avatars/0.png'
                     })
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    // Salva o token
-                    localStorage.setItem('auth_token', data.token);
-                    // Redireciona para o dashboard
-                    window.location.href = '/index.html?token=' + data.token;
-                } else {
-                    showError(data.error || 'Erro ao fazer login');
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erro ao fazer login');
                 }
+
+                // Salvar token
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('user_id', data.user.id);
+                localStorage.setItem('user_role', data.user.role);
+
+                showSuccess('Login realizado! Redirecionando...');
+                
+                // Redirecionar após 1 segundo
+                setTimeout(() => {
+                    window.location.replace('/index.html');
+                }, 1000);
+
             } catch (err) {
-                showError('Erro ao conectar com o servidor: ' + err.message);
+                showError(err.message || 'Erro ao conectar com o servidor');
+                console.error('Login error:', err);
             } finally {
-                hideLoading();
+                loginBtn.disabled = false;
+                loadingDiv.style.display = 'none';
             }
         }
 
-        function showLoading() {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('discord-login-btn').disabled = true;
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('discord-login-btn').disabled = false;
+        function isValidDiscordId(id) {
+            return /^\d+$/.test(id);
         }
 
         function showError(msg) {
@@ -200,13 +258,11 @@
             errorDiv.style.display = 'block';
         }
 
-        // Verificar se já tem token
-        window.addEventListener('load', () => {
-            const token = localStorage.getItem('auth_token');
-            if (token) {
-                window.location.href = '/index.html?token=' + token;
-            }
-        });
+        function showSuccess(msg) {
+            const successDiv = document.getElementById('success-msg');
+            successDiv.textContent = msg;
+            successDiv.style.display = 'block';
+        }
     </script>
 </body>
 </html>

@@ -109,7 +109,7 @@ const api = express.Router();
 
 // --- ROTAS DE LOGIN VIA DISCORD ---
 api.get('/login', (req, res) => {
-  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+  const REDIRECT_URI = (process.env.DISCORD_REDIRECT_URI || '').trim();
   const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
   if (!CLIENT_ID) {
@@ -130,7 +130,7 @@ api.get('/callback', async (req, res) => {
       client_secret: process.env.DISCORD_CLIENT_SECRET,
       grant_type: 'authorization_code',
       code,
-      redirect_uri: process.env.DISCORD_REDIRECT_URI,
+      redirect_uri: (process.env.DISCORD_REDIRECT_URI || '').trim(),
       scope: 'identify guilds guilds.members.read'
     }), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -154,11 +154,14 @@ api.get('/callback', async (req, res) => {
     // Gerar JWT com role
     const jwtToken = require('./auth').generateToken(user, memberData.roles);
 
-    // Devolver token para o front
-    res.json({ token: jwtToken });
+    // Redirecionar para o front com o token
+    res.redirect(`/?token=${jwtToken}`);
   } catch (err) {
     console.error('Erro no callback:', err.message);
-    res.status(500).send('Erro ao autenticar com Discord');
+    if (err.response) {
+      console.error('Detalhes do erro Discord:', JSON.stringify(err.response.data, null, 2));
+    }
+    res.status(500).send('Erro ao autenticar com Discord. Verifique o console do servidor.');
   }
 });
 

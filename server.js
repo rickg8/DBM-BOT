@@ -1,3 +1,4 @@
+const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -328,19 +329,7 @@ DISCORD_CLIENT.on('messageCreate', async (message) => {
     }
 });
 
-DISCORD_CLIENT.login(process.env.DISCORD_TOKEN).catch(e => console.error("Erro Bot:", e.message));
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
-
-const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-
-(async () => {
-});
-app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));
- // ==========================================
-// COMANDO DE HIERARQUIA (COLE ESTE BLOCO)
-// ==========================================
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
-
+// CONFIGURAÇÃO DO COMANDO /HIERARQUIA
 const commands = [
     new SlashCommandBuilder()
         .setName('hierarquia')
@@ -351,6 +340,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
     try {
+        console.log('Iniciando registro do comando /');
         await rest.put(
             Routes.applicationCommands('1469882501475602453'), 
             { body: commands },
@@ -361,18 +351,17 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     }
 })();
 
+// RESPOSTA DO BOT AO COMANDO
 DISCORD_CLIENT.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.commandName === 'hierarquia') {
-        const msg = `🛵 **Hierarquia DBM** 🛵\n` +
+        const msg = `🛵 **Hierarquia DBM** 🛵\n\n` +
             `@・Comandante『DBM』 (1)\n<@554409578486431794>\n\n` +
             `@・SubComandante『DBM』 (1)\n<@1324784566854221895>\n\n` +
             `*Hierarquia atualizada em: ${new Date().toLocaleDateString('pt-BR')}*`;
         await interaction.reply(msg);
     }
 });
-// ==========================================
 
-
-
-
+// ISSO DEVE VIR DEPOIS DE TUDO:
+DISCORD_CLIENT.login(process.env.DISCORD_TOKEN).catch(e => console.error("Erro Bot:", e.message));

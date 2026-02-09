@@ -178,36 +178,72 @@ api.put('/protocolos/:id/finalizar', auth.adminMiddleware, (req, res) => { // AP
     res.json(updated);
 });
 
-// --- ROTA DE CALLBACK (LOGIN DISCORD) INTEGRADA ---
+// --- ROTAS DE AUTENTICAÇÃO DISCORD OAUTH2 ---
 
+// Rota para iniciar login Discord
+api.get('/login', (req, res) => {
+    const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'https://odd-deanne-richard7-d040cbf1.koyeb.app/api/v1/callback';
+    const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+    
+    if (!CLIENT_ID) {
+        return res.status(500).send('DISCORD_CLIENT_ID não configurado');
+    }
+
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
+    
+    res.redirect(authUrl);
+});
+
+// Rota de callback OAuth2
 api.get('/callback', async (req, res) => {
     const { code } = req.query;
-    const GUILD_ID = '1368980327342542918'; 
-    if (!code) return res.status(400).send('Sem código');
+    const GUILD_ID = process.env.DISCORD_GUILD_ID || '1368980327342542918';
+    const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'https://odd-deanne-richard7-d040cbf1.koyeb.app/api/v1/callback';
+    
+    if (!code) return res.status(400).send('Código OAuth2 ausente');
 
     try {
+        // Trocar código por access token
         const tokenRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
             client_id: process.env.DISCORD_CLIENT_ID,
             client_secret: process.env.DISCORD_CLIENT_SECRET,
             code,
             grant_type: 'authorization_code',
-            redirect_uri: 'https://odd-deanne-richard7-d040cbf1.koyeb.app/api/callback',
-            scope: 'identify guilds.members.read',
+            redirect_uri: REDIRECT_URI,
+            scope: 'identify guilds guilds.members.read',
         }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
 
         const access_token = tokenRes.data.access_token;
-        const userRes = await axios.get('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${access_token}` } });
         
+        // Buscar dados do usuário
+        const userRes = await axios.get('https://discord.com/api/users/@me', { 
+            headers: { Authorization: `Bearer ${access_token}` } 
+        });
+        
+        // Buscar cargos no servidor
         let roles = [];
         try {
-            const memberRes = await axios.get(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, { headers: { Authorization: `Bearer ${access_token}` } });
-            roles = memberRes.data.roles;
-        } catch (e) { console.log("Cargos não lidos"); }
+            const memberRes = await axios.get(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, { 
+                headers: { Authorization: `Bearer ${access_token}` } 
+            });
+            roles = memberRes.data.roles || [];
+            console.log(`✅ Usuário ${userRes.data.username} logado com cargos:`, roles);
+        } catch (e) { 
+            console.warn('⚠️ Não foi possível ler cargos do usuário');
+        }
 
+        // Gerar token JWT com os cargos
         const token = auth.generateToken(userRes.data, roles);
+        
+        // Cadastrar piloto no banco se não existir
         db.prepare('INSERT OR IGNORE INTO pilotos (nome, cor) VALUES (?, ?)').run(userRes.data.username, '#2563eb');
+        
+        // Redirecionar com token na URL
         res.redirect(`/index.html?token=${token}`);
-    } catch (err) { res.status(500).send('Erro no login'); }
+    } catch (err) { 
+        console.error('❌ Erro no login Discord:', err.response?.data || err.message);
+        res.status(500).send('Erro ao autenticar com Discord. Tente novamente.');
+    }
 });
 
 // Outras rotas menores mantidas

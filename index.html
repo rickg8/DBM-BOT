@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DBM - Evento de Patrulha</title>
+    <script src="/auth-check.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="page-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">DBM</span>
+        <div>
+          <div class="brand-title">Evento de Patrulha</div>
+          <div class="brand-sub">Registro rápido de protocolos</div>
+        </div>
+      </div>
+      <nav class="topnav">
+        <a class="active" href="index.html">Protocolos</a>
+        <a href="ranking.html">Ranking</a>
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
+      <div class="top-actions">
+        <span class="pill badge" id="openBadge">Abertos: 0</span>
+        <a class="pill" href="dashboard.html">Ver painel</a>
+        <button class="pill" onclick="logout()" style="background: #e74c3c; border: none; cursor: pointer;">🚪 Logout</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Registro oficial</p>
+          <img
+            src="assets/imgs/YamahaTenere.png"
+            alt="Yamaha Tenere"
+            class="hero-image"
+            width="20"
+            height="20"
+          />
+          <h1>Controle de Horas do Evento</h1>
+          <p class="lede">
+            Lance protocolos, acompanhe os pilotos e mantenha o histórico do
+            evento sempre atualizado.
+          </p>
+          <div class="hero-actions">
+            <a class="pill" href="ranking.html">Ver ranking</a>
+            <a class="pill ghost" href="dashboard.html">Abrir dashboard</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p class="muted">Ação rápida</p>
+          <h3 class="hero-highlight">Protocolos</h3>
+          <p class="muted">Preencha abaixo e lance</p>
+        </div>
+      </section>
+
+      <section class="panel form-section">
+        <div class="panel-header">
+          <div>
+            <h2>Novo Protocolo</h2>
+            <p class="muted">Abra o painel lateral para registrar</p>
+          </div>
+          <button type="button" class="pill" id="openDrawer">
+            Abrir formulário
+          </button>
+        </div>
+        <p class="muted">
+          Use o drawer lateral para lançar protocolos sem sair da lista.
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>📋 Protocolos por piloto</h2>
+          <div class="toolbar">
+            <div class="filters collapsed" id="filtersPanel">
+              <select id="filterPiloto">
+                <option value="">Todos os pilotos</option>
+              </select>
+              <select id="filterStatus">
+                <option value="">Status: Todos</option>
+                <option value="ABERTO">Somente abertos</option>
+                <option value="FINALIZADO">Somente finalizados</option>
+                <option value="ADVERTENCIA">Somente advertências</option>
+                <option value="NAO PARTICIPANDO">
+                  Somente não participando
+                </option>
+                <option value="INATIVO">Somente inativos</option>
+              </select>
+              <input
+                type="text"
+                id="filterBusca"
+                placeholder="Buscar (piloto, veículo, link)"
+              />
+              <select id="filterOrdenacao">
+                <option value="data_desc">Ordenar: Data ⬇</option>
+                <option value="data_asc">Ordenar: Data ⬆</option>
+                <option value="dur_desc">Ordenar: Duração ⬇</option>
+                <option value="dur_asc">Ordenar: Duração ⬆</option>
+              </select>
+              <input type="date" id="filterDataInicio" />
+              <input type="date" id="filterDataFim" />
+              <button type="button" class="action" id="filterAplicar">
+                Filtrar
+              </button>
+              <button type="button" class="action ghost" id="filterLimpar">
+                Limpar
+              </button>
+            </div>
+            <button type="button" class="action" id="filterToggle">
+              Mostrar filtros
+            </button>
+            <button type="button" class="pill" id="exportCsv">
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+        <div id="pilotCards" class="pilot-cards"></div>
+      </section>
+    </main>
+
+    <div id="protocolDrawer" class="drawer hidden">
+      <div class="drawer-panel">
+        <div class="drawer-header">
+          <div>
+            <p class="eyebrow small">Formulário</p>
+            <h3 id="drawerTitle">Novo protocolo</h3>
+          </div>
+          <button type="button" class="action danger" id="drawerClose">
+            Fechar
+          </button>
+        </div>
+        <div class="drawer-body">
+          <form id="protocolForm" class="drawer-form">
+            <select id="piloto" required>
+              <option value="">Selecione o piloto</option>
+            </select>
+            <select id="veiculo" required>
+              <option value="">Selecione o veículo</option>
+            </select>
+            <input
+              type="url"
+              id="link"
+              placeholder="Link do protocolo (opcional)"
+            />
+            <input type="date" id="data" required />
+            <input type="time" id="inicio" required />
+            <input type="time" id="fim" />
+            <select id="status" aria-label="Status do protocolo">
+              <option value="FINALIZADO">Finalizado</option>
+              <option value="ABERTO">Aberto (finalizar depois)</option>
+              <option value="ADVERTENCIA">Advertência (não contabiliza)</option>
+              <option value="NAO PARTICIPANDO">Não participando</option>
+              <option value="INATIVO">Inativo</option>
+            </select>
+            <p class="muted small-note">
+              Status define se o fim é obrigatório e se a duração será
+              contabilizada.
+            </p>
+            <div class="drawer-actions">
+              <button type="submit">Adicionar Protocolo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="editModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="pilot-badge" id="editPilotoBadge"></div>
+          <button type="button" id="editClose" class="action danger">
+            Fechar
+          </button>
+        </div>
+        <div class="modal-body">
+          <label
+            >Veículo
+            <select id="editVeiculo"></select>
+          </label>
+          <label
+            >Link do protocolo (opcional)
+            <input type="url" id="editLink" />
+          </label>
+          <label
+            >Data
+            <input type="date" id="editData" />
+          </label>
+          <label
+            >Início
+            <input type="time" id="editInicio" />
+          </label>
+          <label
+            >Fim
+            <input type="time" id="editFim" />
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="editSave" class="action">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="finalizeModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Finalizar protocolo</h3>
+          <button type="button" id="finalizeClose" class="action danger">
+            Fechar
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="muted" id="finalizeInfo"></p>
+          <label
+            >Horário de fim (HH:MM)
+            <input type="time" id="finalizeFim" />
+          </label>
+          <div class="muted" id="finalizePreview">Duração: –</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="finalizeConfirm" class="action">
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script>
+      // Captura o token da URL se existir (vindo do redirecionamento do Discord)
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      if (token) {
+        localStorage.setItem('auth_token', token);
+        document.cookie = `auth_token=${token}; path=/; max-age=604800; SameSite=Strict`;
+        window.history.replaceState({}, document.title, "/index.html");
+        console.log("Login realizado e token salvo!");
+      }
+
+      // Função de Logout
+      function logout() {
+        window.clearAuth();
+        window.location.href = 'login.html';
+      }
+    </script>
+  </body>
+</html>

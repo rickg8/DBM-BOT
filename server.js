@@ -21,7 +21,11 @@ const db = new Database(DB_PATH);
 
 // Discord Bot Security Configuration
 const DISCORD_CLIENT = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+    intents: [
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ]
 });
 const CHANNEL_IDS = {
     hierarquia: '1368980963752939661',
@@ -254,7 +258,62 @@ app.use('/api/v1', api);
 app.use(express.static(PUBLIC_DIR));
 
 // Inicialização do Bot
-DISCORD_CLIENT.once('ready', () => console.log(`🤖 Bot Discord: ${DISCORD_CLIENT.user.tag}`));
+DISCORD_CLIENT.once('ready', () => {
+    console.log(`🤖 Bot Discord: ${DISCORD_CLIENT.user.tag}`);
+});
+
+// Comando /hierarquia
+DISCORD_CLIENT.on('messageCreate', async (message) => {
+    // Ignorar mensagens de bots
+    if (message.author.bot) return;
+
+    // Comando /hierarquia
+    if (message.content.toLowerCase() === '/hierarquia') {
+        try {
+            const guild = message.guild;
+            if (!guild) return message.reply('Este comando só funciona em servidores!');
+
+            // Buscar todos os membros do servidor
+            await guild.members.fetch();
+
+            // IDs dos cargos importantes (da hierarquia mais alta para a mais baixa)
+            const rolesHierarchy = [
+                { id: '1368980327342542918', name: '👑 Fundador', emoji: '👑' },
+                { id: '1368980593997594757', name: '⭐ Comandante', emoji: '⭐' },
+                { id: '1368980687999991848', name: '🎖️ Sub-Comandante', emoji: '🎖️' },
+                { id: '1368980735055585290', name: '🔰 Equipe DBM', emoji: '🔰' },
+                { id: '1368980963752939661', name: '🏍️ Piloto', emoji: '🏍️' }
+            ];
+
+            let hierarchyText = '# 📋 Hierarquia DBM\n\n';
+
+            for (const roleData of rolesHierarchy) {
+                const role = guild.roles.cache.get(roleData.id);
+                if (!role) continue;
+
+                const members = guild.members.cache.filter(m => m.roles.cache.has(roleData.id));
+                
+                if (members.size > 0) {
+                    hierarchyText += `## ${roleData.emoji} ${role.name}\n`;
+                    members.forEach(member => {
+                        hierarchyText += `- ${member.user.username}\n`;
+                    });
+                    hierarchyText += '\n';
+                }
+            }
+
+            hierarchyText += `\n*Total de membros: ${guild.memberCount}*`;
+
+            // Enviar no canal
+            await message.channel.send(hierarchyText);
+
+        } catch (error) {
+            console.error('Erro ao executar comando /hierarquia:', error);
+            message.reply('Ocorreu um erro ao buscar a hierarquia.');
+        }
+    }
+});
+
 DISCORD_CLIENT.login(process.env.DISCORD_TOKEN).catch(e => console.error("Erro Bot:", e.message));
 
 app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));

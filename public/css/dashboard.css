@@ -1,0 +1,14 @@
+/* Estilos específicos da página de Dashboard */
+.dashboard-page .hero-card {
+  min-height: 120px;
+}
+
+.dashboard-page .cards-grid {
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .dashboard-page .cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}

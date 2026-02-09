@@ -1,0 +1,43 @@
+/* Estilos específicos da página de Protocolos */
+.index-page .hero {
+  grid-template-columns: 2fr 1fr;
+}
+
+.index-page .hero-image {
+  width: 140px;
+  height: auto;
+  display: block;
+  margin: 4px 0 10px;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.35));
+}
+
+.index-page .hero .hero-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .index-page .hero-image {
+    width: 120px;
+    margin: 8px 0 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .index-page .hero-image {
+    width: 110px;
+  }
+}
+
+@media (max-width: 540px) {
+  .index-page .hero {
+    gap: 10px;
+  }
+
+  .index-page .hero-image {
+    width: 95px;
+  }
+}
+
+.index-page .drawer {
+  backdrop-filter: blur(6px);
+}

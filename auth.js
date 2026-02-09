@@ -1,39 +1,46 @@
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'seu-secret-super-seguro-mude-em-producao';
-
-// IDs de admins (comando DBM)
+const JWT_SECRET = process.env.JWT_SECRET || 'seu-secret-super-seguro';
 const ADMIN_IDS = ['1324784566854221895', '554409578486431794']; // Richard e Breno
 
-// Tipos de permissões
 const ROLES = {
-    ADMIN: 'admin',      // Richard e Breno - acesso total
-    USER: 'user'         // Todos os outros usuários Discord
+    ADMIN: 'admin',      // Richard e Breno (Comandantes)
+    EQUIPE: 'equipe',    // Membros com cargo no Discord
+    USER: 'user'         // Visitantes/Pilotos sem cargo
 };
 
-// Obter permissões do usuário baseado no ID
-function getUserRole(discordId) {
-    return ADMIN_IDS.includes(discordId) ? ROLES.ADMIN : ROLES.USER;
+// IDs dos cargos no seu servidor (Pegue esses IDs no Discord)
+const ROLE_IDS = {
+    EQUIPE_DBM: '1368980963752939661', // Exemplo: Use o ID do cargo de Equipe
+};
+
+function getUserRole(discordId, memberData = null) {
+    if (ADMIN_IDS.includes(discordId)) return ROLES.ADMIN;
+    
+    // Se o bot encontrou o membro no servidor e ele tem o cargo de equipe
+    if (memberData && memberData.roles && memberData.roles.includes(ROLE_IDS.EQUIPE_DBM)) {
+        return ROLES.EQUIPE;
+    }
+    
+    return ROLES.USER;
 }
 
-// Gerar JWT token
-function generateToken(user) {
+function generateToken(user, roles = []) {
     return jwt.sign(
         {
             id: user.id,
             username: user.username,
             avatar: user.avatar,
-            role: getUserRole(user.id),
+            role: getUserRole(user.id, { roles }), // Define o cargo no Token
             iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 dias
+            exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
         },
         JWT_SECRET,
         { algorithm: 'HS256' }
     );
 }
 
-// Verificar token JWT
 function verifyToken(token) {
     try {
         return jwt.verify(token, JWT_SECRET);
@@ -42,47 +49,26 @@ function verifyToken(token) {
     }
 }
 
-// Middleware para verificar autenticação
 function authMiddleware(req, res, next) {
-    const token = req.headers.authorization?.split(' ')[1] || req.cookies?.auth_token;
+    const token = req.headers.authorization?.split(' ')[1] || req.query.token;
     
-    if (!token) {
-        return res.status(401).json({ error: 'Sem autenticação', code: 'NO_AUTH' });
-    }
+    if (!token) return res.status(401).json({ error: 'Acesso negado', code: 'NO_AUTH' });
 
     const decoded = verifyToken(token);
-    if (!decoded) {
-        return res.status(401).json({ error: 'Token inválido ou expirado', code: 'INVALID_TOKEN' });
-    }
+    if (!decoded) return res.status(401).json({ error: 'Sessão expirada', code: 'INVALID_TOKEN' });
 
     req.user = decoded;
     next();
 }
 
-// Middleware para verificar se é admin
+// Bloqueia quem não é Richard, Breno ou Admin
 function adminMiddleware(req, res, next) {
     authMiddleware(req, res, () => {
         if (req.user.role !== ROLES.ADMIN) {
-            return res.status(403).json({ error: 'Acesso negado - Requer permissão de comandante DBM', code: 'FORBIDDEN' });
+            return res.status(403).json({ error: 'Somente o Comando DBM pode realizar esta ação.' });
         }
         next();
     });
-}
-
-// Buscar dados do usuário do Discord via token
-async function fetchDiscordUser(accessToken) {
-    try {
-        const response = await axios.get('https://discord.com/api/v10/users/@me', {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'User-Agent': 'DBM-Bot/1.0'
-            }
-        });
-        return response.data;
-    } catch (err) {
-        console.error('Erro ao buscar usuário Discord:', err.message);
-        return null;
-    }
 }
 
 module.exports = {
@@ -90,9 +76,6 @@ module.exports = {
     verifyToken,
     authMiddleware,
     adminMiddleware,
-    getUserRole,
-    fetchDiscordUser,
     ROLES,
-    ADMIN_IDS,
-    JWT_SECRET
+    ADMIN_IDS
 };

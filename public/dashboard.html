@@ -2,6 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DBM - Dashboard</title>
     <script src="/auth-check.js"></script>
     <script src="js/ui.js"></script>
@@ -10,6 +11,7 @@
     <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
   </head>
   <body class="app-shell dashboard-page" data-route="dashboard">
+    <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <img src="assets/imgs/DBMlogo.png" alt="Logo DBM" class="brand-logo" />
@@ -66,13 +68,20 @@
 
     <div class="app-content">
       <header class="app-topbar">
-        <button
-          class="icon-button sidebar-toggle"
-          id="sidebarToggle"
-          aria-label="Abrir menu de navegação"
-        >
-          <span class="icon-hamb"></span>
-        </button>
+        <nav class="app-nav" aria-label="Navegação principal">
+          <a
+            class="nav-link active"
+            data-route="dashboard"
+            href="dashboard.html"
+            >Dashboard</a
+          >
+          <a class="nav-link" data-route="protocolos" href="index.html"
+            >Protocolos</a
+          >
+          <a class="nav-link" data-route="ranking" href="ranking.html"
+            >Ranking</a
+          >
+        </nav>
         <div class="topbar-actions">
           <div id="sessionStatus"></div>
           <a class="pill" href="index.html">+ Registrar novo</a>
@@ -104,7 +113,7 @@
         </div>
       </header>
 
-      <main class="page-content">
+      <main class="page-content" id="mainContent">
         <section class="hero">
           <div>
             <p class="eyebrow">Visão geral</p>

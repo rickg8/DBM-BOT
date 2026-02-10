@@ -616,7 +616,10 @@ async function loadProtocols() {
 }
 
 function openDrawerPanel() {
-    if (drawer) drawer.classList.remove("hidden");
+    if (drawer) {
+        drawer.classList.remove("hidden");
+        document.body.classList.add('drawer-open');
+    }
     drawerMode = drawerMode || 'create';
     if (drawerMode === 'create') {
         if (drawerTitle) drawerTitle.textContent = "Novo protocolo";
@@ -626,7 +629,10 @@ function openDrawerPanel() {
 }
 
 function closeDrawerPanel() {
-    if (drawer) drawer.classList.add("hidden");
+    if (drawer) {
+        drawer.classList.add("hidden");
+        document.body.classList.remove('drawer-open');
+    }
     drawerMode = 'create';
 }
 
@@ -658,6 +664,20 @@ function closeFinalizeModal() {
 finalizeClose?.addEventListener("click", closeFinalizeModal);
 finalizeModal?.addEventListener("click", e => {
     if (e.target === finalizeModal) closeFinalizeModal();
+});
+
+// Fechar drawer ao clicar fora
+drawer?.addEventListener('click', e => {
+    if (e.target === drawer) closeDrawerPanel();
+});
+
+// Escape para fechar drawer e modais
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        closeDrawerPanel();
+        closeModal();
+        closeFinalizeModal();
+    }
 });
 
 editSave?.addEventListener("click", async () => {

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DBM - Frota</title>
+    <script src="/auth-check.js"></script>
+    <script src="js/ui.js"></script>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/frota.css" />
+    <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
+  </head>
+  <body class="app-shell" data-route="frota">
+    <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="assets/imgs/DBMlogo.png" alt="Logo DBM" class="brand-logo" />
+        <div>
+          <div class="brand-title">D.B.M</div>
+          <div class="brand-sub">Departamento de bombeiros motociclistas</div>
+        </div>
+        <button
+          class="sidebar-close"
+          id="sidebarClose"
+          aria-label="Fechar menu"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-section-title">PRINCIPAL</p>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" data-route="dashboard" href="dashboard.html"
+            >Dashboard</a
+          >
+          <a class="sidebar-link" data-route="protocolos" href="index.html"
+            >Cadastro de Protocolo</a
+          >
+          <a class="sidebar-link" data-route="ranking" href="ranking.html"
+            >Ranking</a
+          >
+          <a class="sidebar-link active" data-route="frota" href="frota.html"
+            >Frota</a
+          >
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div
+            class="avatar avatar-md"
+            id="sidebarAvatar"
+            aria-hidden="true"
+          ></div>
+          <div class="user-meta">
+            <div class="user-name" id="sidebarUsername">Usuário</div>
+            <div class="user-role-line">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span class="user-role" id="sidebarRole">Conectado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="app-content">
+      <header class="app-topbar">
+        <nav class="app-nav" aria-label="Navegação principal">
+          <a class="nav-link" data-route="dashboard" href="dashboard.html"
+            >Dashboard</a
+          >
+          <a class="nav-link" data-route="protocolos" href="index.html"
+            >Protocolos</a
+          >
+          <a class="nav-link" data-route="ranking" href="ranking.html"
+            >Ranking</a
+          >
+          <a class="nav-link active" data-route="frota" href="frota.html"
+            >Frota</a
+          >
+        </nav>
+        <div class="topbar-actions">
+          <div id="sessionStatus"></div>
+          <div class="avatar-menu">
+            <button
+              class="user-chip"
+              id="topbarUserChip"
+              aria-label="Abrir menu do usuário"
+              aria-haspopup="menu"
+              aria-expanded="false"
+            >
+              <div
+                class="avatar avatar-sm avatar-status"
+                id="topbarAvatar"
+                aria-hidden="true"
+              >
+                <span class="status-dot" aria-hidden="true"></span>
+              </div>
+              <div class="user-chip-meta">
+                <span class="user-chip-name" id="topbarName">Usuário</span>
+                <span class="user-chip-role" id="topbarRole">Conectado</span>
+              </div>
+              <span class="chip-caret">▾</span>
+            </button>
+            <div class="dropdown-menu" id="userDropdown" role="menu">
+              <button class="dropdown-item" id="logoutAction">Sair</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="page-content" id="mainContent">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Frota DBM</p>
+            <h1>Veículos, capacidades e requisitos</h1>
+            <p class="lede">
+              Consulte disponibilidade, requisitos e equipamentos de cada
+              veículo em um único lugar.
+            </p>
+            <div class="hero-actions">
+              <button class="pill" id="openFilters">Filtrar frota</button>
+              <button class="pill ghost" id="exportFleet">Exportar</button>
+            </div>
+          </div>
+          <div class="hero-card">
+            <p class="muted">Resumo</p>
+            <h3 class="hero-highlight" id="fleetTotal">–</h3>
+            <p class="muted">Veículos cadastrados</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Filtros rápidos</h2>
+            <div class="toolbar">
+              <div class="filters" id="fleetFilters">
+                <label class="field" for="fleetBusca">
+                  <span>Buscar</span>
+                  <input
+                    type="text"
+                    id="fleetBusca"
+                    placeholder="Nome, categoria ou equipamento"
+                  />
+                </label>
+                <label class="field" for="fleetTipo">
+                  <span>Tipo</span>
+                  <select id="fleetTipo">
+                    <option value="">Todos</option>
+                    <option value="moto">Moto</option>
+                    <option value="viatura">Viatura</option>
+                    <option value="apoio">Apoio</option>
+                  </select>
+                </label>
+                <label class="field" for="fleetStatus">
+                  <span>Status</span>
+                  <select id="fleetStatus">
+                    <option value="">Todos</option>
+                    <option value="disponivel">Disponível</option>
+                    <option value="em_missao">Em missão</option>
+                    <option value="manutencao">Manutenção</option>
+                  </select>
+                </label>
+                <label class="field" for="fleetBase">
+                  <span>Base</span>
+                  <select id="fleetBase">
+                    <option value="">Todas</option>
+                    <option value="central">Central</option>
+                    <option value="zona_sul">Zona Sul</option>
+                    <option value="zona_norte">Zona Norte</option>
+                  </select>
+                </label>
+                <div class="filters-actions">
+                  <button type="button" class="action" id="fleetApply">
+                    Aplicar
+                  </button>
+                  <button type="button" class="action ghost" id="fleetClear">
+                    Limpar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="filters-active"
+            id="fleetActiveFilters"
+            aria-live="polite"
+          ></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Frota</h2>
+            <p class="muted">Selecione um veículo para ver detalhes</p>
+          </div>
+          <div class="fleet-grid" id="fleetGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="filters-backdrop" id="fleetFiltersBackdrop"></div>
+    <div class="filters-shell" id="fleetFiltersSheet">
+      <div class="filters-primary">
+        <label class="field" for="sheetBusca">
+          <span>Buscar</span>
+          <input
+            type="text"
+            id="sheetBusca"
+            placeholder="Nome, categoria ou equipamento"
+          />
+        </label>
+        <label class="field" for="sheetTipo">
+          <span>Tipo</span>
+          <select id="sheetTipo">
+            <option value="">Todos</option>
+            <option value="moto">Moto</option>
+            <option value="viatura">Viatura</option>
+            <option value="apoio">Apoio</option>
+          </select>
+        </label>
+        <label class="field" for="sheetStatus">
+          <span>Status</span>
+          <select id="sheetStatus">
+            <option value="">Todos</option>
+            <option value="disponivel">Disponível</option>
+            <option value="em_missao">Em missão</option>
+            <option value="manutencao">Manutenção</option>
+          </select>
+        </label>
+        <label class="field" for="sheetBase">
+          <span>Base</span>
+          <select id="sheetBase">
+            <option value="">Todas</option>
+            <option value="central">Central</option>
+            <option value="zona_sul">Zona Sul</option>
+            <option value="zona_norte">Zona Norte</option>
+          </select>
+        </label>
+        <div class="filters-actions">
+          <button type="button" class="action" id="sheetApply">Aplicar</button>
+          <button type="button" class="action ghost" id="sheetClose">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer hidden" id="fleetDrawer">
+      <div class="drawer-panel">
+        <div class="drawer-header">
+          <div>
+            <p class="eyebrow small">Detalhes do veículo</p>
+            <h3 id="drawerTitle">–</h3>
+          </div>
+          <button type="button" class="action ghost" id="drawerClose">
+            Fechar
+          </button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+      </div>
+    </div>
+
+    <script src="js/frota.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (window.uiHelpers)
+          window.uiHelpers.initShellLayout({ route: "frota" });
+      });
+    </script>
+  </body>
+</html>

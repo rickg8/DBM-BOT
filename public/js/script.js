@@ -200,6 +200,17 @@ function isFinalized(protocol) {
     return (protocol?.status || 'FINALIZADO').toUpperCase() === 'FINALIZADO';
 }
 
+function formatHoursLabel(seconds) {
+    if (!Number.isFinite(seconds) || seconds <= 0) return '0h';
+    const hours = seconds / 3600;
+    return `${hours.toFixed(1)} h`;
+}
+
+function parseDateSafe(value) {
+    const d = new Date(value);
+    return Number.isNaN(d?.getTime()) ? null : d;
+}
+
 // calcula duração considerando virada de dia
 function calculateDuration(date, start, end) {
     const startTime = new Date(`${date}T${start}`);

@@ -5,18 +5,19 @@
   --fleet-available: #3ecf8e;
   --fleet-busy: #f3b000;
   --fleet-maint: #f35b66;
+  --fleet-surface: #0b1221;
 }
 
 .page-content {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .hero {
   background: linear-gradient(120deg, #0e1a2c, #10192b);
   border: 1px solid var(--fleet-card-border);
   border-radius: 14px;
-  padding: 20px;
+  padding: 18px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 16px;
@@ -42,8 +43,8 @@
 
 .filters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 12px;
   align-items: end;
 }
 
@@ -53,9 +54,14 @@
   align-items: center;
 }
 
+.field > span {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
 .fleet-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
 }
 
@@ -64,12 +70,13 @@
   border: 1px solid var(--fleet-card-border);
   border-radius: 12px;
   padding: 12px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
   gap: 10px;
   transition:
     border-color 0.15s ease,
     transform 0.15s ease;
+  min-height: 100%;
 }
 
 .fleet-card:hover {
@@ -77,15 +84,40 @@
   transform: translateY(-2px);
 }
 
-.fleet-cover {
-  width: 100%;
-  border-radius: 10px;
-  background: #0b1221;
+.fleet-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.fleet-title {
+  display: grid;
+  gap: 4px;
+}
+
+.fleet-title h3 {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.fleet-media {
+  position: relative;
+  background: var(--fleet-surface);
   border: 1px solid var(--fleet-card-border);
-  aspect-ratio: 4/3;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  display: grid;
+  place-items: center;
+}
+
+.fleet-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  max-height: 100%;
 }
 
 .fleet-meta {
@@ -96,7 +128,7 @@
 }
 
 .badge {
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
@@ -124,7 +156,7 @@
 
 .fleet-body {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .chips {
@@ -142,15 +174,31 @@
   line-height: 1.2;
 }
 
+.fleet-tags {
+  display: grid;
+  gap: 6px;
+}
+
+.fleet-tags h4 {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
 .card-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
 .card-actions button {
   width: 100%;
+}
+
+.action.primary {
+  background: #2f87ff;
+  color: #fff;
+  border-color: #2f87ff;
+  font-weight: 700;
 }
 
 .filters-shell {
@@ -212,6 +260,66 @@
   gap: 10px;
 }
 
+.state-block {
+  background: var(--fleet-surface);
+  border: 1px dashed var(--fleet-card-border);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.state-block h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.skeleton-card {
+  background: var(--fleet-card-bg);
+  border: 1px solid var(--fleet-card-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.skeleton-line,
+.skeleton-media {
+  background: linear-gradient(90deg, #10192b, #142036, #10192b);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.skeleton-line {
+  height: 12px;
+}
+
+.skeleton-media {
+  aspect-ratio: 16/9;
+}
+
+.skeleton-line.short {
+  width: 60%;
+  height: 10px;
+}
+
+.skeleton-line.tiny {
+  width: 30%;
+  height: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
@@ -224,5 +332,9 @@
   .filters-shell {
     display: grid;
     gap: 12px;
+  }
+
+  .fleet-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }

@@ -1,3 +1,5 @@
+const FALLBACK_IMAGE = "assets/imgs/Banner.png";
+
 const fleetData = [
     {
         id: "tenere-01",
@@ -12,6 +14,32 @@ const fleetData = [
         requisitos: ["Licença A", "Treinamento off-road", "Ficha médica ok"],
         observacoes: "Indicada para missões rápidas em terreno misto.",
     },
+    {
+        id: "resgate-02",
+        nome: "Resgate 4x4",
+        tipo: "viatura",
+        status: "em_missao",
+        base: "zona_sul",
+        alcance: "Médio",
+        autonomiaKm: 500,
+        imagem: "assets/imgs/Banner.png",
+        equipamentos: ["Desfibrilador", "Oxigênio", "Macas"],
+        requisitos: ["CNH D", "Curso APH avançado"],
+        observacoes: "Suporte avançado e transporte de vítimas.",
+    },
+    {
+        id: "apoio-01",
+        nome: "Van Apoio",
+        tipo: "apoio",
+        status: "manutencao",
+        base: "zona_norte",
+        alcance: "Baixo",
+        autonomiaKm: 420,
+        imagem: "assets/imgs/Banner.png",
+        equipamentos: ["Ferramental", "Kit comunicação", "Peças reposição"],
+        requisitos: ["CNH B", "Checklist diário"],
+        observacoes: "Mobilização rápida para suporte logístico.",
+    },
 ];
 
 const state = {
@@ -21,10 +49,19 @@ const state = {
         status: "",
         base: "",
     },
-    filtered: fleetData,
+    filtered: [],
+    loading: true,
+    error: null,
 };
 
 const el = (id) => document.getElementById(id);
+
+const imageFallback = (img) => {
+    img.onerror = () => {
+        img.onerror = null;
+        img.src = FALLBACK_IMAGE;
+    };
+};
 
 function badgeClass(status) {
     if (status === "disponivel") return "badge success";
@@ -108,26 +145,52 @@ function renderGrid() {
     const grid = el("fleetGrid");
     grid.innerHTML = "";
 
+    if (state.loading) {
+        renderSkeleton(grid);
+        el("fleetTotal").textContent = "–";
+        return;
+    }
+
+    if (state.error) {
+        renderError(grid, state.error);
+        el("fleetTotal").textContent = "0";
+        return;
+    }
+
+    if (!state.filtered.length) {
+        renderEmpty(grid);
+        el("fleetTotal").textContent = "0";
+        return;
+    }
+
     state.filtered.forEach((item) => {
         const card = document.createElement("article");
         card.className = "fleet-card";
 
-        const cover = document.createElement("div");
-        cover.className = "fleet-cover";
-        cover.style.backgroundImage = `url(${item.imagem})`;
+        const header = document.createElement("div");
+        header.className = "fleet-header";
+        header.innerHTML = `<div class="fleet-title">
+                <p class="eyebrow small">${typeLabel(item.tipo)}</p>
+                <h3>${item.nome}</h3>
+            </div>
+            <span class="badge ${badgeClass(item.status)}">${statusLabel(item.status)}</span>`;
 
-        const meta = document.createElement("div");
-        meta.className = "fleet-meta";
-        meta.innerHTML = `<div>
-        <p class="eyebrow small">${typeLabel(item.tipo)}</p>
-        <h3>${item.nome}</h3>
-      </div>
-      <span class="badge ${badgeClass(item.status)}">${statusLabel(item.status)}</span>`;
+        const media = document.createElement("div");
+        media.className = "fleet-media";
+        const img = document.createElement("img");
+        img.src = item.imagem || FALLBACK_IMAGE;
+        img.alt = `Imagem de ${item.nome}`;
+        img.loading = "lazy";
+        imageFallback(img);
+        media.appendChild(img);
 
         const body = document.createElement("div");
         body.className = "fleet-body";
-        body.innerHTML = `<p class="muted">Alcance: ${item.alcance} • Autonomia: ${item.autonomiaKm} km</p>`;
+        body.innerHTML = `<p class="muted">Base: ${baseLabel(item.base)} • Alcance: ${item.alcance} • Autonomia: ${item.autonomiaKm} km</p>`;
 
+        const tags = document.createElement("div");
+        tags.className = "fleet-tags";
+        tags.innerHTML = `<h4>Equipamentos</h4>`;
         const eq = document.createElement("div");
         eq.className = "chips";
         item.equipamentos.forEach((e) => {
@@ -136,6 +199,20 @@ function renderGrid() {
             chip.textContent = e;
             eq.appendChild(chip);
         });
+        tags.appendChild(eq);
+
+        const reqWrap = document.createElement("div");
+        reqWrap.className = "fleet-tags";
+        reqWrap.innerHTML = `<h4>Requisitos</h4>`;
+        const req = document.createElement("div");
+        req.className = "chips";
+        item.requisitos.forEach((r) => {
+            const chip = document.createElement("span");
+            chip.className = "chip";
+            chip.textContent = r;
+            req.appendChild(chip);
+        });
+        reqWrap.appendChild(req);
 
         const cardActions = document.createElement("div");
         cardActions.className = "card-actions";
@@ -145,17 +222,58 @@ function renderGrid() {
         detailsBtn.addEventListener("click", () => openDrawer(item));
 
         const selectBtn = document.createElement("button");
-        selectBtn.className = "action";
+        selectBtn.className = "action primary";
         selectBtn.textContent = "Reservar";
         selectBtn.addEventListener("click", () => alert(`Reservado: ${item.nome}`));
 
         cardActions.append(detailsBtn, selectBtn);
 
-        card.append(cover, meta, body, eq, cardActions);
+        card.append(header, media, body, tags, reqWrap, cardActions);
         grid.appendChild(card);
     });
 
     el("fleetTotal").textContent = state.filtered.length;
+}
+
+function renderSkeleton(grid) {
+    const skeletons = Array.from({ length: 6 }).map(() => {
+        const s = document.createElement("div");
+        s.className = "skeleton-card";
+        s.innerHTML = `
+            <div class="skeleton-line tiny"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-media"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line short"></div>
+        `;
+        return s;
+    });
+    skeletons.forEach((s) => grid.appendChild(s));
+}
+
+function renderEmpty(grid) {
+    const block = document.createElement("div");
+    block.className = "state-block";
+    block.innerHTML = `
+        <h3>Nenhum veículo encontrado</h3>
+        <p class="muted">Ajuste os filtros ou limpe para ver toda a frota.</p>
+        <button class="pill" type="button" id="resetFleetFilters">Limpar filtros</button>
+    `;
+    grid.appendChild(block);
+    const reset = block.querySelector("#resetFleetFilters");
+    reset.addEventListener("click", clearFilters);
+}
+
+function renderError(grid, message) {
+    const block = document.createElement("div");
+    block.className = "state-block";
+    block.innerHTML = `
+        <h3>Erro ao carregar</h3>
+        <p class="muted">${message}</p>
+        <button class="pill" type="button" id="retryFleet">Tentar novamente</button>
+    `;
+    grid.appendChild(block);
+    block.querySelector("#retryFleet").addEventListener("click", () => loadFleet());
 }
 
 function syncStateFromInputs(prefix = "fleet") {
@@ -185,8 +303,8 @@ function openDrawer(item) {
     el("drawerTitle").textContent = item.nome;
     const body = el("drawerBody");
     body.innerHTML = `
-    <div class="fleet-cover" style="background-image: url(${item.imagem})"></div>
-    <p class="muted">${statusLabel(item.status)} • ${typeLabel(item.tipo)} • ${baseLabel(item.base)}</p>
+        <div class="fleet-media"><img src="${item.imagem || FALLBACK_IMAGE}" alt="Imagem de ${item.nome}" loading="lazy" /></div>
+        <p class="muted">${statusLabel(item.status)} • ${typeLabel(item.tipo)} • ${baseLabel(item.base)}</p>
     <p>${item.observacoes || ""}</p>
     <div>
       <p class="eyebrow small">Equipamentos</p>
@@ -197,6 +315,8 @@ function openDrawer(item) {
       <div class="chips">${item.requisitos.map((r) => `<span class="chip">${r}</span>`).join("")}</div>
     </div>
   `;
+    const img = body.querySelector("img");
+    if (img) imageFallback(img);
 }
 
 function closeDrawer() {
@@ -235,11 +355,30 @@ function wireGlobal() {
     el("drawerClose").addEventListener("click", closeDrawer);
 }
 
+function loadFleet() {
+    state.loading = true;
+    state.error = null;
+    renderGrid();
+
+    // Simula carregamento; substituir por fetch real quando a API estiver pronta.
+    setTimeout(() => {
+        try {
+            applyFilters();
+            state.loading = false;
+            renderGrid();
+        } catch (err) {
+            state.loading = false;
+            state.error = "Não foi possível carregar a frota.";
+            renderGrid();
+        }
+    }, 200);
+}
+
 function init() {
     initFilters();
     wireGlobal();
     syncFiltersFromState();
-    applyFilters();
+    loadFleet();
 }
 
 document.addEventListener("DOMContentLoaded", init);

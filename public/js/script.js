@@ -385,14 +385,14 @@ function renderPilotCards() {
 
             return `
                     <tr class="${isOpen ? 'row-open' : ''}">
-                        <td>${formatDateDisplay(p.data)}</td>
-                        <td>${p.inicio}</td>
-                        <td>${p.fim}</td>
-                        <td>${duracaoDisplay}</td>
-                        <td>${p.veiculo}</td>
-                        <td>${renderDiscordLink(p.link)}</td>
-                        <td>${statusBadge}</td>
-                        <td>
+                        <td data-label="Data">${formatDateDisplay(p.data)}</td>
+                        <td data-label="Início">${p.inicio}</td>
+                        <td data-label="Fim">${p.fim}</td>
+                        <td data-label="Duração">${duracaoDisplay}</td>
+                        <td data-label="Veículo">${p.veiculo}</td>
+                        <td data-label="Link">${renderDiscordLink(p.link)}</td>
+                        <td data-label="Status">${statusBadge}</td>
+                        <td data-label="Ações">
                             ${finalizeBtn}
                             <button type="button" class="action" data-id="${p.id}" data-action="edit">🛠️</button>
                             <button type="button" class="action danger" data-id="${p.id}" data-action="delete">🗑️</button>
@@ -403,9 +403,9 @@ function renderPilotCards() {
 
         const totalRow = `
                     <tr class="total-row">
-                        <td colspan="3">Total</td>
-                        <td>${formatDuration(totalSeconds)}</td>
-                        <td colspan="4"></td>
+                        <td data-label="Total" colspan="3">Total</td>
+                        <td data-label="Duração">${formatDuration(totalSeconds)}</td>
+                        <td data-label="" colspan="4"></td>
                     </tr>
                 `;
 

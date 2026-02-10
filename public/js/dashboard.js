@@ -186,12 +186,12 @@ function renderTopPilots(protocols, pilotColors) {
         const color = pilotColors[piloto] || "#4b5563";
         return `
       <tr>
-        <td><span class="pilot-badge" style="background:${color}">${piloto}</span></td>
-        <td>${info.count}</td>
-        <td>${formatDuration(info.segundos)}</td>
-        <td>${formatDuration(media)}</td>
-            <td>${info.last ? formatDateDisplay(info.last.data) : '-'}</td>
-            <td>${renderDiscordLink(info.link)}</td>
+                <td data-label="Piloto"><span class="pilot-badge" style="background:${color}">${piloto}</span></td>
+                <td data-label="Protocolos">${info.count}</td>
+                <td data-label="Horas">${formatDuration(info.segundos)}</td>
+                <td data-label="Média">${formatDuration(media)}</td>
+                        <td data-label="Último">${info.last ? formatDateDisplay(info.last.data) : '-'}</td>
+                        <td data-label="Link">${renderDiscordLink(info.link)}</td>
       </tr>
     `;
     }).join("");
@@ -212,12 +212,12 @@ function renderRecent(protocols, pilotColors) {
         const dur = isWarn ? '—' : formatDuration(p.duracao);
         return `
             <tr class="${isOpen ? 'row-open' : ''}">
-        <td>${formatDateDisplay(p.data)}</td>
-        <td><span class="pilot-badge" style="background:${color}">${p.piloto}</span></td>
-        <td>${dur}</td>
-        <td>${p.veiculo}</td>
-                <td><span class="status-badge ${statusClass}">${p.status || 'FINALIZADO'}</span></td>
-            <td>${renderDiscordLink(p.link)}</td>
+        <td data-label="Data">${formatDateDisplay(p.data)}</td>
+        <td data-label="Piloto"><span class="pilot-badge" style="background:${color}">${p.piloto}</span></td>
+        <td data-label="Duração">${dur}</td>
+        <td data-label="Veículo">${p.veiculo}</td>
+                <td data-label="Status"><span class="status-badge ${statusClass}">${p.status || 'FINALIZADO'}</span></td>
+            <td data-label="Link">${renderDiscordLink(p.link)}</td>
       </tr>
     `;
     }).join("");

@@ -173,45 +173,65 @@
             <h2>📋 Protocolos por piloto</h2>
             <div class="toolbar">
               <div class="filters" id="filtersPanel">
-                <select id="filterPiloto">
-                  <option value="">Todos os pilotos</option>
-                </select>
-                <select id="filterStatus">
-                  <option value="">Status: Todos</option>
-                  <option value="ABERTO">Somente abertos</option>
-                  <option value="FINALIZADO">Somente finalizados</option>
-                  <option value="ADVERTENCIA">Somente advertências</option>
-                  <option value="NAO PARTICIPANDO">
-                    Somente não participando
-                  </option>
-                  <option value="INATIVO">Somente inativos</option>
-                </select>
-                <input
-                  type="text"
-                  id="filterBusca"
-                  placeholder="Buscar (piloto, veículo, link)"
-                />
-                <select id="filterOrdenacao">
-                  <option value="data_desc">Ordenar: Data ⬇</option>
-                  <option value="data_asc">Ordenar: Data ⬆</option>
-                  <option value="dur_desc">Ordenar: Duração ⬇</option>
-                  <option value="dur_asc">Ordenar: Duração ⬆</option>
-                </select>
-                <input type="date" id="filterDataInicio" />
-                <input type="date" id="filterDataFim" />
-                <button type="button" class="action" id="filterAplicar">
-                  Filtrar
+                <label class="field" for="filterPiloto">
+                  <span>Piloto</span>
+                  <select id="filterPiloto">
+                    <option value="">Todos os pilotos</option>
+                  </select>
+                </label>
+                <label class="field" for="filterStatus">
+                  <span>Status</span>
+                  <select id="filterStatus">
+                    <option value="">Todos</option>
+                    <option value="ABERTO">Somente abertos</option>
+                    <option value="FINALIZADO">Somente finalizados</option>
+                    <option value="ADVERTENCIA">Somente advertências</option>
+                    <option value="NAO PARTICIPANDO">Não participando</option>
+                    <option value="INATIVO">Inativos</option>
+                  </select>
+                </label>
+                <label class="field" for="filterBusca">
+                  <span>Buscar</span>
+                  <input
+                    type="text"
+                    id="filterBusca"
+                    placeholder="Piloto, veículo ou link"
+                  />
+                </label>
+                <label class="field" for="filterOrdenacao">
+                  <span>Ordenar por</span>
+                  <select id="filterOrdenacao">
+                    <option value="data_desc">Data ⬇</option>
+                    <option value="data_asc">Data ⬆</option>
+                    <option value="dur_desc">Duração ⬇</option>
+                    <option value="dur_asc">Duração ⬆</option>
+                  </select>
+                </label>
+                <label class="field" for="filterDataInicio">
+                  <span>Data inicial</span>
+                  <input type="date" id="filterDataInicio" />
+                </label>
+                <label class="field" for="filterDataFim">
+                  <span>Data final</span>
+                  <input type="date" id="filterDataFim" />
+                </label>
+                <div class="filters-actions">
+                  <button type="button" class="action" id="filterAplicar">
+                    Filtrar
+                  </button>
+                  <button type="button" class="action ghost" id="filterLimpar">
+                    Limpar
+                  </button>
+                </div>
+              </div>
+              <div class="toolbar-actions">
+                <button type="button" class="action" id="filterToggle">
+                  Ocultar filtros
                 </button>
-                <button type="button" class="action ghost" id="filterLimpar">
-                  Limpar
+                <button type="button" class="pill" id="exportCsv">
+                  Exportar CSV
                 </button>
               </div>
-              <button type="button" class="action" id="filterToggle">
-                Mostrar filtros
-              </button>
-              <button type="button" class="pill" id="exportCsv">
-                Exportar CSV
-              </button>
             </div>
           </div>
           <div id="pilotCards" class="pilot-cards"></div>

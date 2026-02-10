@@ -133,55 +133,56 @@
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel panel-filters">
           <div class="panel-header">
-            <h2>Filtros rápidos</h2>
-            <div class="toolbar">
-              <div class="filters" id="fleetFilters">
-                <label class="field" for="fleetBusca">
-                  <span>Buscar</span>
-                  <input
-                    type="text"
-                    id="fleetBusca"
-                    placeholder="Nome, categoria ou equipamento"
-                  />
-                </label>
-                <label class="field" for="fleetTipo">
-                  <span>Tipo</span>
-                  <select id="fleetTipo">
-                    <option value="">Todos</option>
-                    <option value="moto">Moto</option>
-                    <option value="viatura">Viatura</option>
-                    <option value="apoio">Apoio</option>
-                  </select>
-                </label>
-                <label class="field" for="fleetStatus">
-                  <span>Status</span>
-                  <select id="fleetStatus">
-                    <option value="">Todos</option>
-                    <option value="disponivel">Disponível</option>
-                    <option value="em_missao">Em missão</option>
-                    <option value="manutencao">Manutenção</option>
-                  </select>
-                </label>
-                <label class="field" for="fleetBase">
-                  <span>Base</span>
-                  <select id="fleetBase">
-                    <option value="">Todas</option>
-                    <option value="central">Central</option>
-                    <option value="zona_sul">Zona Sul</option>
-                    <option value="zona_norte">Zona Norte</option>
-                  </select>
-                </label>
-                <div class="filters-actions">
-                  <button type="button" class="action" id="fleetApply">
-                    Aplicar
-                  </button>
-                  <button type="button" class="action ghost" id="fleetClear">
-                    Limpar
-                  </button>
-                </div>
-              </div>
+            <div>
+              <h2>Filtros rápidos</h2>
+              <p class="muted">Ajuste tipo, status e base antes de buscar.</p>
+            </div>
+          </div>
+          <div class="filters-shell filters-panel" aria-label="Filtros da frota">
+            <div class="filters-primary">
+              <label class="field" for="fleetBusca">
+                <span>Buscar</span>
+                <input
+                  type="text"
+                  id="fleetBusca"
+                  placeholder="Nome, categoria ou equipamento"
+                />
+              </label>
+              <label class="field" for="fleetTipo">
+                <span>Tipo</span>
+                <select id="fleetTipo">
+                  <option value="">Todos</option>
+                  <option value="moto">Moto</option>
+                  <option value="viatura">Viatura</option>
+                  <option value="apoio">Apoio</option>
+                </select>
+              </label>
+              <label class="field" for="fleetStatus">
+                <span>Status</span>
+                <select id="fleetStatus">
+                  <option value="">Todos</option>
+                  <option value="disponivel">Disponível</option>
+                  <option value="em_missao">Em missão</option>
+                  <option value="manutencao">Manutenção</option>
+                </select>
+              </label>
+              <label class="field" for="fleetBase">
+                <span>Base</span>
+                <select id="fleetBase">
+                  <option value="">Todas</option>
+                  <option value="central">Central</option>
+                  <option value="zona_sul">Zona Sul</option>
+                  <option value="zona_norte">Zona Norte</option>
+                </select>
+              </label>
+            </div>
+            <div class="filters-actions">
+              <button type="button" class="action" id="fleetApply">Aplicar</button>
+              <button type="button" class="action ghost" id="fleetClear">
+                Limpar
+              </button>
             </div>
           </div>
           <div
@@ -202,7 +203,7 @@
     </div>
 
     <div class="filters-backdrop" id="fleetFiltersBackdrop"></div>
-    <div class="filters-shell" id="fleetFiltersSheet">
+    <div class="filters-sheet" id="fleetFiltersSheet">
       <div class="filters-primary">
         <label class="field" for="sheetBusca">
           <span>Buscar</span>

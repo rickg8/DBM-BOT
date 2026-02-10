@@ -21,6 +21,10 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family:
@@ -40,6 +44,7 @@ body {
     var(--bg);
   color: var(--text);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a {
@@ -575,6 +580,46 @@ body.nav-open {
     justify-content: flex-end;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .app-shell {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app-content {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .page-content,
+  .panel,
+  .hero,
+  .cards-grid {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .panel {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .panel h2,
+  .panel p,
+  .hero h1,
+  .hero p {
+    word-break: break-word;
+  }
+
+  table,
+  .fancy-table,
+  .fancy-table th,
+  .fancy-table td {
+    width: 100%;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 }
 

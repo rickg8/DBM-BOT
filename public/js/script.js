@@ -12,15 +12,8 @@ const filterDataInicio = document.getElementById("filterDataInicio");
 const filterDataFim = document.getElementById("filterDataFim");
 const filterAplicar = document.getElementById("filterAplicar");
 const filterLimpar = document.getElementById("filterLimpar");
-const filterToggle = document.getElementById("filterToggle");
-const filtersPanel = document.getElementById("filtersPanel");
-const filtersShell = document.getElementById("filtersShell");
-const filtersAdvanced = document.getElementById("filtersAdvanced");
 const filtersActive = document.getElementById("filtersActive");
-const advancedToggle = document.getElementById("advancedToggle");
-const filterDrawerOpen = document.getElementById("filterDrawerOpen");
-const filterDrawerClose = document.getElementById("filterDrawerClose");
-const filtersBackdrop = document.getElementById("filtersBackdrop");
+const filterOnlyMe = document.getElementById("filterOnlyMe");
 const exportCsvBtn = document.getElementById("exportCsv");
 const openBadge = document.getElementById("openBadge");
 const openDrawerBtn = document.getElementById("openDrawer");
@@ -42,6 +35,18 @@ const finalizeConfirm = document.getElementById("finalizeConfirm");
 const finalizeFim = document.getElementById("finalizeFim");
 const finalizeInfo = document.getElementById("finalizeInfo");
 const finalizePreview = document.getElementById("finalizePreview");
+const summaryTotal = document.getElementById("summaryTotal");
+const summaryOpen = document.getElementById("summaryOpen");
+const summaryFinalized = document.getElementById("summaryFinalized");
+const summaryHours = document.getElementById("summaryHours");
+const protocolsUpdated = document.getElementById("protocolsUpdated");
+const detailPilotName = document.getElementById("detailPilotName");
+const detailPilotId = document.getElementById("detailPilotId");
+const detailPilotHours = document.getElementById("detailPilotHours");
+const detailPilotCount = document.getElementById("detailPilotCount");
+const detailPilotProgress = document.getElementById("detailPilotProgress");
+const detailPilotOpen = document.getElementById("detailPilotOpen");
+const detailPilotLast = document.getElementById("detailPilotLast");
 
 let protocols = [];
 let filteredProtocols = [];
@@ -53,6 +58,11 @@ let currentEditingStatus = "";
 let cachedVeiculos = [];
 let finalizingId = null;
 let finalizingProtocol = null;
+let pilotSummaries = [];
+let selectedPilotName = null;
+let currentSession = null;
+let lastUpdatedAt = null;
+let leaderSecondsCache = 0;
 const NON_COUNT_STATUSES = ['ADVERTENCIA', 'NAO PARTICIPANDO', 'INATIVO'];
 
 // ===== AUTENTICAÇÃO =====
@@ -248,6 +258,31 @@ function showSwalToast({ title, text, icon = 'success' }) {
     notify(text || title, icon === 'success' ? 'success' : 'info');
 }
 
+function updateProtocolsUpdatedTime() {
+    if (!protocolsUpdated) return;
+    protocolsUpdated.textContent = lastUpdatedAt
+        ? `Atualizado às ${formatTimeLabel(lastUpdatedAt)}`
+        : 'Atualizando...';
+}
+
+function updateSummaryStats() {
+    if (!summaryTotal) return;
+    const total = protocols.length;
+    const openCount = protocols.filter(p => (p.status || '').toUpperCase() === 'ABERTO').length;
+    const finalizedCount = protocols.filter(p => isFinalized(p)).length;
+    const hours = protocols.reduce((sum, p) => {
+        const statusVal = (p.status || 'FINALIZADO').toUpperCase();
+        if (isNonCounting(statusVal) || statusVal === 'ABERTO') return sum;
+        return sum + (p.duracao || 0);
+    }, 0);
+
+    summaryTotal.textContent = total;
+    summaryOpen.textContent = openCount;
+    summaryFinalized.textContent = finalizedCount;
+    summaryHours.textContent = formatHoursLabel(hours);
+    updateProtocolsUpdatedTime();
+}
+
 async function confirmDelete() {
     if (window.Swal) {
         const result = await Swal.fire({
@@ -298,15 +333,20 @@ function syncFimWithStatus() {
 statusSelect?.addEventListener("change", syncFimWithStatus);
 
 function applyFilters() {
+    updateSummaryStats();
+    const text = filterBusca?.value.trim().toLowerCase() || '';
+    const onlyMeActive = filterOnlyMe?.checked && currentSession?.username;
+    const userName = currentSession?.username?.toLowerCase();
+
     filteredProtocols = protocols.filter(p => {
         const statusVal = (p.status || 'FINALIZADO').toUpperCase();
-        const text = filterBusca?.value.trim().toLowerCase() || '';
         const pilotOk = !filterPiloto?.value || p.piloto === filterPiloto.value;
         const statusOk = !filterStatus?.value || statusVal === filterStatus.value;
         const startOk = !filterDataInicio?.value || p.data >= filterDataInicio.value;
         const endOk = !filterDataFim?.value || p.data <= filterDataFim.value;
         const textOk = !text || [p.piloto, p.veiculo, p.link, p.status].some(val => String(val || '').toLowerCase().includes(text));
-        return pilotOk && statusOk && startOk && endOk && textOk;
+        const onlyMeOk = !onlyMeActive || (p.piloto?.toLowerCase() === userName);
+        return pilotOk && statusOk && startOk && endOk && textOk && onlyMeOk;
     });
 
     const sort = filterOrdenacao?.value || 'data_desc';
@@ -321,7 +361,6 @@ function applyFilters() {
     saveFilters();
     renderActiveFilters();
     renderPilotCards();
-    toggleFilterDrawer(false);
 }
 
 function saveFilters() {
@@ -332,7 +371,8 @@ function saveFilters() {
             busca: filterBusca?.value || '',
             ordenacao: filterOrdenacao?.value || 'data_desc',
             dataInicio: filterDataInicio?.value || '',
-            dataFim: filterDataFim?.value || ''
+            dataFim: filterDataFim?.value || '',
+            onlyMe: filterOnlyMe?.checked ? '1' : '0'
         };
         localStorage.setItem('dbm_filters', JSON.stringify(payload));
     } catch (err) {
@@ -351,6 +391,7 @@ function restoreFilters() {
         if (filterOrdenacao) filterOrdenacao.value = payload.ordenacao || 'data_desc';
         if (filterDataInicio) filterDataInicio.value = payload.dataInicio || '';
         if (filterDataFim) filterDataFim.value = payload.dataFim || '';
+        if (filterOnlyMe) filterOnlyMe.checked = payload.onlyMe === '1';
         renderActiveFilters();
     } catch (err) {
         console.warn('Não foi possível restaurar filtros', err);
@@ -372,6 +413,7 @@ function renderActiveFilters() {
     if (start || end) chips.push({ label: 'Período', value: `${start || '...'} → ${end || '...'}` });
     if (busca) chips.push({ label: 'Busca', value: busca });
     if (sort && sort !== 'data_desc') chips.push({ label: 'Ordenação', value: sort });
+    if (filterOnlyMe?.checked) chips.push({ label: 'Meu usuário', value: 'Somente meu usuário' });
 
     if (!chips.length) {
         filtersActive.innerHTML = '<span class="muted">Nenhum filtro aplicado</span>';
@@ -390,40 +432,16 @@ filterLimpar?.addEventListener("click", () => {
     if (filterOrdenacao) filterOrdenacao.value = "data_desc";
     if (filterDataInicio) filterDataInicio.value = "";
     if (filterDataFim) filterDataFim.value = "";
+    if (filterOnlyMe) filterOnlyMe.checked = false;
     filteredProtocols = [];
     saveFilters();
     renderActiveFilters();
     renderPilotCards();
 });
 
-filterToggle?.addEventListener("click", () => {
-    if (!filtersPanel) return;
-    const isCollapsed = filtersPanel.classList.toggle("collapsed");
-    if (filterToggle) filterToggle.textContent = isCollapsed ? "Mostrar filtros" : "Ocultar filtros";
+filterOnlyMe?.addEventListener("change", () => {
+    applyFilters();
 });
-
-advancedToggle?.addEventListener("click", () => {
-    if (!filtersAdvanced) return;
-    const isCollapsed = filtersAdvanced.classList.toggle("collapsed");
-    advancedToggle.textContent = isCollapsed ? "Filtros avançados" : "Ocultar avançados";
-});
-
-function toggleFilterDrawer(open) {
-    const shouldOpen = open ?? !filtersShell?.classList.contains("is-open");
-    if (shouldOpen) {
-        filtersShell?.classList.add("is-open");
-        filtersBackdrop?.classList.add("is-visible");
-        document.body.classList.add("filters-open");
-    } else {
-        filtersShell?.classList.remove("is-open");
-        filtersBackdrop?.classList.remove("is-visible");
-        document.body.classList.remove("filters-open");
-    }
-}
-
-filterDrawerOpen?.addEventListener("click", () => toggleFilterDrawer(true));
-filterDrawerClose?.addEventListener("click", () => toggleFilterDrawer(false));
-filtersBackdrop?.addEventListener("click", () => toggleFilterDrawer(false));
 
 /* =========================
    RENDERIZAÇÃO
@@ -435,35 +453,62 @@ function renderPilotCards() {
 
     const list = filteredProtocols.length ? filteredProtocols : protocols;
 
-    if (list.length === 0) {
+    if (!list.length) {
         pilotCards.innerHTML = '<p class="muted">Nenhum protocolo ainda.</p>';
+        pilotSummaries = [];
+        selectedPilotName = null;
+        updateDetailPanel(null);
         return;
     }
 
-    const groups = list.reduce((acc, p) => {
-        acc[p.piloto] = acc[p.piloto] || [];
-        acc[p.piloto].push(p);
-        return acc;
-    }, {});
+    const pilotMap = new Map();
+    list.forEach((protocol) => {
+        const name = protocol.piloto || 'Piloto desconhecido';
+        if (!pilotMap.has(name)) pilotMap.set(name, []);
+        pilotMap.get(name).push(protocol);
+    });
 
-    const pilotosOrdenados = Object.keys(groups).sort();
-    pilotosOrdenados.forEach((piloto, idx) => {
-        const entries = groups[piloto].sort((a, b) => new Date(b.data) - new Date(a.data));
-        const totalSeconds = entries.reduce((sum, p) => {
-            const statusVal = (p.status || '').toUpperCase();
-            if (isNonCounting(statusVal)) return sum;
-            return sum + p.duracao;
+    pilotSummaries = Array.from(pilotMap.entries()).map(([name, entries]) => {
+        const totalSeconds = entries.reduce((sum, protocol) => {
+            const statusVal = (protocol.status || 'FINALIZADO').toUpperCase();
+            if (isNonCounting(statusVal) || statusVal === 'ABERTO') return sum;
+            return sum + (protocol.duracao || 0);
         }, 0);
-        const color = pilotColors[piloto] || "#4b5563";
+        const openCount = entries.filter(protocol => (protocol.status || '').toUpperCase() === 'ABERTO').length;
+        const lastDate = entries.reduce((latest, protocol) => {
+            const date = parseDateSafe(protocol.data);
+            if (!date) return latest;
+            return (!latest || date > latest) ? date : latest;
+        }, null);
+        return {
+            name,
+            entries: entries.slice().sort((a, b) => new Date(b.data) - new Date(a.data)),
+            totalSeconds,
+            openCount,
+            lastDate,
+            color: pilotColors[name] || '#4b5563',
+            id: entries[0]?.pilotoId || '—'
+        };
+    }).sort((a, b) => b.totalSeconds - a.totalSeconds);
 
-        const rows = entries.map(p => {
+    leaderSecondsCache = pilotSummaries[0]?.totalSeconds || 0;
+
+    if (!selectedPilotName || !pilotSummaries.some(p => p.name === selectedPilotName)) {
+        selectedPilotName = pilotSummaries[0]?.name || null;
+    }
+
+    pilotSummaries.forEach((pilot, index) => {
+        const progress = leaderSecondsCache
+            ? Math.min(100, Math.round((pilot.totalSeconds / leaderSecondsCache) * 100))
+            : 0;
+        const rows = pilot.entries.map(p => {
             const statusVal = (p.status || '').toUpperCase();
             const isOpen = statusVal === 'ABERTO';
             const noDuration = isNonCounting(statusVal);
             const duracaoDisplay = noDuration ? '—' : formatDuration(p.duracao);
             const statusBadge = `<span class="status-badge ${isOpen ? 'open' : (noDuration ? 'warn' : 'closed')}" title="${statusTitle(p)}">${p.status || 'FINALIZADO'}</span>`;
             const finalizeBtn = isOpen
-                ? `<button type="button" class="action" data-id="${p.id}" data-action="finalizar">Finalizar Protocolo</button>`
+                ? `<button type="button" class="action" data-id="${p.id}" data-action="finalizar">Finalizar protocolo</button>`
                 : '';
 
             return `
@@ -482,53 +527,123 @@ function renderPilotCards() {
                         </td>
                     </tr>
                 `;
-        }).join("");
+        }).join('');
 
         const totalRow = `
                     <tr class="total-row">
                         <td data-label="Total" colspan="3">Total</td>
-                        <td data-label="Duração">${formatDuration(totalSeconds)}</td>
+                        <td data-label="Duração">${formatDuration(pilot.totalSeconds)}</td>
                         <td data-label="" colspan="4"></td>
                     </tr>
                 `;
 
-        const card = document.createElement("div");
-        card.className = "pilot-card";
+        const card = document.createElement('article');
+        card.className = `pilot-card ${selectedPilotName === pilot.name ? 'selected' : ''}`;
+        card.dataset.pilot = pilot.name;
+        const headerHtml = `
+            <div class="pilot-meta">
+                <span class="position">#${index + 1}</span>
+                <div class="pilot-avatar" style="background:${pilot.color}">${pilot.name.slice(0, 2).toUpperCase()}</div>
+                <div>
+                    <h3>${pilot.name}</h3>
+                    <p class="pilot-id">${pilot.entries.length} protocolos</p>
+                </div>
+            </div>
+            <div class="pilot-right">
+                <div class="pilot-hours">${formatHoursLabel(pilot.totalSeconds)}</div>
+                <div class="pilot-badge">${progress}% do líder</div>
+            </div>
+        `;
         card.innerHTML = `
-                    <header>
-                        <span class="pilot-badge" style="background:${color}">${piloto}</span>
-                        <span class="totals">${entries.length} protocolo(s) · ${formatDuration(totalSeconds)}</span>
-                    </header>
-                    <div class="table-scroll">
-                      <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Início</th>
-                                <th>Fim</th>
-                                <th>Duração</th>
-                                <th>Veículo</th>
-                                <th>Link</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                            ${totalRow}
-                        </tbody>
-                      </table>
+            <header class="pilot-header">${headerHtml}</header>
+            <div class="pilot-details">
+                <div class="pilot-stats">
+                    <div class="pilot-stat">
+                        <span class="muted small">Protocolos</span>
+                        <strong>${pilot.entries.length}</strong>
                     </div>
-                `;
+                    <div class="pilot-stat">
+                        <span class="muted small">Em aberto</span>
+                        <strong>${pilot.openCount}</strong>
+                    </div>
+                    <div class="pilot-stat">
+                        <span class="muted small">Horas válidas</span>
+                        <strong>${formatHoursLabel(pilot.totalSeconds)}</strong>
+                    </div>
+                </div>
+                <div class="pilot-progress-track">
+                    <div class="pilot-progress-fill" style="width:${progress}%"></div>
+                </div>
+                <div class="pilot-table">
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Início</th>
+                                    <th>Fim</th>
+                                    <th>Duração</th>
+                                    <th>Veículo</th>
+                                    <th>Link</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                                ${totalRow}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
 
+        const header = card.querySelector('.pilot-header');
+        header?.addEventListener('click', () => selectPilot(pilot.name));
         pilotCards.appendChild(card);
-
-        if (idx < pilotosOrdenados.length - 1) {
-            const divider = document.createElement("div");
-            divider.className = "table-divider";
-            pilotCards.appendChild(divider);
-        }
     });
+
+    updateDetailPanel(selectedPilotName);
+}
+
+function highlightPilotCards(name) {
+    if (!pilotCards) return;
+    pilotCards.querySelectorAll('.pilot-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.pilot === name);
+    });
+}
+
+function selectPilot(name) {
+    if (!name) return;
+    selectedPilotName = name;
+    updateDetailPanel(name);
+}
+
+function updateDetailPanel(name) {
+    if (!detailPilotName) return;
+    const pilot = pilotSummaries.find(p => p.name === name);
+    if (!pilot) {
+        detailPilotName.textContent = 'Selecione um piloto';
+        detailPilotId.textContent = 'ID —';
+        detailPilotHours.textContent = '—';
+        detailPilotCount.textContent = '—';
+        if (detailPilotProgress) detailPilotProgress.style.width = '0%';
+        if (detailPilotOpen) detailPilotOpen.textContent = '—';
+        if (detailPilotLast) detailPilotLast.textContent = 'Último protocolo: —';
+        highlightPilotCards(null);
+        return;
+    }
+
+    detailPilotName.textContent = pilot.name;
+    detailPilotId.textContent = `ID ${pilot.id || '—'}`;
+    detailPilotHours.textContent = formatHoursLabel(pilot.totalSeconds);
+    detailPilotCount.textContent = pilot.entries.length;
+    const progress = leaderSecondsCache ? Math.min(100, Math.round((pilot.totalSeconds / leaderSecondsCache) * 100)) : 0;
+    if (detailPilotProgress) detailPilotProgress.style.width = `${progress}%`;
+    if (detailPilotOpen) detailPilotOpen.textContent = pilot.openCount ? `${pilot.openCount} em aberto` : 'Sem protocolos em aberto';
+    if (detailPilotLast) detailPilotLast.textContent = pilot.lastDate ? `Último protocolo: ${formatTimeLabel(pilot.lastDate)}` : 'Último protocolo: —';
+    highlightPilotCards(pilot.name);
 }
 
 /* =========================
@@ -697,6 +812,7 @@ async function loadProtocols() {
     }
     try {
         protocols = await fetchProtocols();
+        lastUpdatedAt = new Date();
         applyFilters();
         updateOpenBadge();
     } catch (err) {
@@ -929,6 +1045,7 @@ async function init() {
 
     if (window.uiHelpers) {
         window.uiHelpers.renderSessionChip('sessionStatus');
+        currentSession = window.uiHelpers.getSession();
         const logoutBtn = document.getElementById('logoutBtn');
         logoutBtn?.addEventListener('click', async () => {
             const ok = await window.uiHelpers.confirmLogout();

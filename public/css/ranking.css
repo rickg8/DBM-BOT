@@ -435,8 +435,11 @@
   justify-content: center;
   background: #1f2937;
   color: #e2e8f0;
-  border-radius: 14px;
+  border-radius: 50%;
   font-weight: 700;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .avatar-sm {

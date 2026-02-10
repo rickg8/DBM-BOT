@@ -72,7 +72,6 @@
             return;
         }
         const username = session.username || session.id || 'usuário';
-        target.innerHTML = `<div class="session-chip" aria-live="polite"><strong>@${username}</strong>${renderRoleBadge(session.role)}</div>`;
     }
 
     function detectRoute() {
@@ -136,11 +135,15 @@
         const openSidebar = () => {
             sidebar?.classList.add('is-open');
             backdrop?.classList.add('is-visible');
+            toggle?.classList.add('is-active');
+            document.body.classList.add('nav-open');
         };
 
         const closeSidebar = () => {
             sidebar?.classList.remove('is-open');
             backdrop?.classList.remove('is-visible');
+            toggle?.classList.remove('is-active');
+            document.body.classList.remove('nav-open');
         };
 
         toggle?.addEventListener('click', () => {

@@ -79,7 +79,7 @@ function logout() {
 // Função helper para fazer requisições autenticadas
 function authFetch(url, options = {}) {
     const token = localStorage.getItem('auth_token');
-    
+
     if (!token) {
         console.error('[AUTH] Token não encontrado, redirecionando...');
         window.location.href = '/login.html';
@@ -209,22 +209,12 @@ function renderDiscordLink(link) {
 }
 
 function notify(message, type = 'info') {
-    if (window.Swal) {
-        const toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2800,
-            timerProgressBar: true,
-            customClass: { popup: 'swal-toast' }
-        });
-        toast.fire({
-            icon: type === 'error' ? 'error' : type === 'success' ? 'success' : 'info',
-            title: message
-        });
-        return;
+    if (window.toast) {
+        if (type === 'error') return window.toast.error(message);
+        if (type === 'success') return window.toast.success(message);
+        return window.toast.info(message);
     }
-    alert(message);
+    console.log(message);
 }
 
 async function confirmDelete() {
@@ -488,8 +478,12 @@ form.addEventListener("submit", async e => {
                 body: JSON.stringify({ fim, status })
             });
             if (!res.ok) {
-                const { message } = await res.json();
-                throw new Error(message || "Erro ao finalizar protocolo");
+                let errMsg = "Erro ao finalizar protocolo";
+                try {
+                    const data = await res.json();
+                    errMsg = data?.error || data?.message || errMsg;
+                } catch (_) { /* ignore parse error */ }
+                throw new Error(errMsg);
             }
             await loadProtocols();
             form.reset();
@@ -512,8 +506,12 @@ form.addEventListener("submit", async e => {
         });
 
         if (!res.ok) {
-            const { message } = await res.json();
-            throw new Error(message || "Erro ao salvar protocolo");
+            let errMsg = "Erro ao salvar protocolo";
+            try {
+                const data = await res.json();
+                errMsg = data?.error || data?.message || errMsg;
+            } catch (_) { /* ignore parse error */ }
+            throw new Error(errMsg);
         }
 
         await loadProtocols();
@@ -598,12 +596,21 @@ document.addEventListener("click", async e => {
 ========================= */
 
 async function loadProtocols() {
+    if (pilotCards) {
+        pilotCards.innerHTML = `
+          <div class="skeleton-card skeleton"></div>
+          <div class="skeleton-card skeleton"></div>
+        `;
+    }
     try {
         protocols = await fetchProtocols();
         applyFilters();
         updateOpenBadge();
     } catch (err) {
         console.error(err);
+        if (pilotCards) {
+            pilotCards.innerHTML = `<div class="error-state"><strong>Erro ao carregar protocolos.</strong><div class="empty-actions"><button class="pill" onclick="location.reload()">Recarregar</button></div></div>`;
+        }
         notify("Não foi possível carregar os protocolos.", 'error');
     }
 }
@@ -684,8 +691,12 @@ editSave?.addEventListener("click", async () => {
         });
 
         if (!res.ok) {
-            const { message } = await res.json();
-            throw new Error(message || "Erro ao salvar protocolo");
+            let errMsg = "Erro ao salvar protocolo";
+            try {
+                const data = await res.json();
+                errMsg = data?.error || data?.message || errMsg;
+            } catch (_) { /* ignore parse error */ }
+            throw new Error(errMsg);
         }
 
         await loadProtocols();
@@ -765,8 +776,12 @@ finalizeConfirm?.addEventListener("click", async () => {
             body: JSON.stringify({ fim: fimVal })
         });
         if (!res.ok) {
-            const { message } = await res.json();
-            throw new Error(message || "Erro ao finalizar");
+            let errMsg = "Erro ao finalizar";
+            try {
+                const data = await res.json();
+                errMsg = data?.error || data?.message || errMsg;
+            } catch (_) { /* ignore parse error */ }
+            throw new Error(errMsg);
         }
         await loadProtocols();
         closeFinalizeModal();
@@ -790,6 +805,15 @@ drawer?.addEventListener("click", e => {
 async function init() {
     // Verificar autenticação
     checkAuth();
+
+    if (window.uiHelpers) {
+        window.uiHelpers.renderSessionChip('sessionStatus');
+        const logoutBtn = document.getElementById('logoutBtn');
+        logoutBtn?.addEventListener('click', async () => {
+            const ok = await window.uiHelpers.confirmLogout();
+            if (ok) logout();
+        });
+    }
 
     try {
         const [pilotos, veiculos] = await Promise.all([fetchPilotos(), fetchVeiculos()]);

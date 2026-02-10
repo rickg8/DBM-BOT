@@ -4,6 +4,17 @@ const topPilotsBody = document.getElementById("topPilots");
 const recentBody = document.getElementById("recentProtocols");
 const heroTotal = document.getElementById("heroTotal");
 const NON_COUNT_STATUSES = ['ADVERTENCIA', 'NAO PARTICIPANDO', 'INATIVO'];
+let cachedProtocols = [];
+let filteredProtocols = [];
+
+function notify(message, type = 'info') {
+    if (window.toast) {
+        if (type === 'error') return window.toast.error(message);
+        if (type === 'success') return window.toast.success(message);
+        return window.toast.info(message);
+    }
+    console.log(message);
+}
 
 // ===== AUTENTICAÇÃO =====
 function getAuthToken() {
@@ -36,7 +47,7 @@ function logout() {
 // Função helper para fazer requisições autenticadas
 function authFetch(url, options = {}) {
     const token = localStorage.getItem('auth_token');
-    
+
     if (!token) {
         console.error('[AUTH] Token não encontrado, redirecionando...');
         window.location.href = '/login.html';
@@ -212,9 +223,67 @@ function renderRecent(protocols, pilotColors) {
     }).join("");
 }
 
+function applyDashboardFilters(pilotColors) {
+    const statusChips = document.querySelectorAll('#statusChips .chip');
+    let status = '';
+    statusChips.forEach(chip => {
+        if (chip.classList.contains('active')) status = chip.dataset.status || '';
+    });
+    const start = document.getElementById('dateStart')?.value;
+    const end = document.getElementById('dateEnd')?.value;
+
+    filteredProtocols = cachedProtocols.filter(p => {
+        const statusVal = (p.status || 'FINALIZADO').toUpperCase();
+        const statusOk = !status || statusVal === status;
+        const startOk = !start || p.data >= start;
+        const endOk = !end || p.data <= end;
+        return statusOk && startOk && endOk;
+    });
+
+    const list = filteredProtocols.length ? filteredProtocols : cachedProtocols;
+    renderSummary(list);
+    renderDays(list);
+    renderTopPilots(list, pilotColors);
+    renderRecent(list, pilotColors);
+}
+
+function showSkeletons() {
+    if (summaryCards) {
+        summaryCards.innerHTML = '<div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>';
+    }
+    if (chartDays) {
+        chartDays.innerHTML = '<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div>';
+    }
+    if (topPilotsBody) {
+        topPilotsBody.innerHTML = '<tr><td colspan="6"><div class="skeleton skeleton-line"></div></td></tr>';
+    }
+    if (recentBody) {
+        recentBody.innerHTML = '<tr><td colspan="6"><div class="skeleton skeleton-line"></div></td></tr>';
+    }
+}
+
+function showErrorState(msg) {
+    const html = `<tr><td colspan="6"><div class="error-state"><strong>${msg}</strong><div class="empty-actions"><button class="pill" onclick="location.reload()">Recarregar</button></div></div></td></tr>`;
+    if (summaryCards) summaryCards.innerHTML = `<div class="error-state"><strong>${msg}</strong></div>`;
+    if (chartDays) chartDays.innerHTML = `<div class="error-state"><strong>${msg}</strong></div>`;
+    if (topPilotsBody) topPilotsBody.innerHTML = html;
+    if (recentBody) recentBody.innerHTML = html;
+}
+
 async function init() {
     // Verificar autenticação
     checkAuth();
+
+    if (window.uiHelpers) {
+        window.uiHelpers.renderSessionChip('sessionStatus');
+        const logoutBtn = document.getElementById('logoutBtn');
+        logoutBtn?.addEventListener('click', async () => {
+            const ok = await window.uiHelpers.confirmLogout();
+            if (ok) logout();
+        });
+    }
+
+    showSkeletons();
 
     try {
         const [pilotos, protocols] = await Promise.all([fetchPilotos(), fetchProtocols()]);
@@ -222,13 +291,24 @@ async function init() {
             acc[nome] = cor || "#6b7280";
             return acc;
         }, {});
-        renderSummary(protocols);
-        renderDays(protocols);
-        renderTopPilots(protocols, pilotColors);
-        renderRecent(protocols, pilotColors);
+        cachedProtocols = protocols;
+
+        document.querySelectorAll('#statusChips .chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('#statusChips .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                applyDashboardFilters(pilotColors);
+            });
+        });
+
+        document.getElementById('dateStart')?.addEventListener('change', () => applyDashboardFilters(pilotColors));
+        document.getElementById('dateEnd')?.addEventListener('change', () => applyDashboardFilters(pilotColors));
+
+        applyDashboardFilters(pilotColors);
     } catch (err) {
         console.error(err);
-        alert("Não foi possível carregar o dashboard.");
+        showErrorState("Não foi possível carregar o dashboard.");
+        notify("Não foi possível carregar o dashboard.", 'error');
     }
 }
 

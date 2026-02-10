@@ -25,7 +25,7 @@ const db = new Database(DB_PATH);
 // Discord Bot
 const DISCORD_CLIENT = new Client({
     intents: [
-        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
@@ -110,60 +110,60 @@ const api = express.Router();
 
 // --- ROTAS DE LOGIN VIA DISCORD ---
 api.get('/login', (req, res) => {
-  const REDIRECT_URI = (process.env.DISCORD_REDIRECT_URI || '').trim();
-  const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+    const REDIRECT_URI = (process.env.DISCORD_REDIRECT_URI || '').trim();
+    const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
-  if (!CLIENT_ID) {
-    return res.status(500).send('DISCORD_CLIENT_ID não configurado');
-  }
+    if (!CLIENT_ID) {
+        return res.status(500).send('DISCORD_CLIENT_ID não configurado');
+    }
 
-  const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
-  res.redirect(authUrl);
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
+    res.redirect(authUrl);
 });
 
 api.get('/callback', async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.status(400).send('Código não fornecido');
+    const code = req.query.code;
+    if (!code) return res.status(400).send('Código não fornecido');
 
-  try {
-    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
-      client_id: process.env.DISCORD_CLIENT_ID,
-      client_secret: process.env.DISCORD_CLIENT_SECRET,
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: (process.env.DISCORD_REDIRECT_URI || '').trim(),
-      scope: 'identify guilds guilds.members.read'
-    }), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
+    try {
+        const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+            client_id: process.env.DISCORD_CLIENT_ID,
+            client_secret: process.env.DISCORD_CLIENT_SECRET,
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: (process.env.DISCORD_REDIRECT_URI || '').trim(),
+            scope: 'identify guilds guilds.members.read'
+        }), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
 
-    const accessToken = tokenResponse.data.access_token;
+        const accessToken = tokenResponse.data.access_token;
 
-    // Buscar dados do usuário no Discord
-    const userResponse = await axios.get('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    const user = userResponse.data;
+        // Buscar dados do usuário no Discord
+        const userResponse = await axios.get('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const user = userResponse.data;
 
-    // Buscar cargos do usuário no servidor
-    const memberResponse = await axios.get(
-      `https://discord.com/api/users/@me/guilds/${process.env.DISCORD_GUILD_ID}/member`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    const memberData = memberResponse.data;
+        // Buscar cargos do usuário no servidor
+        const memberResponse = await axios.get(
+            `https://discord.com/api/users/@me/guilds/${process.env.DISCORD_GUILD_ID}/member`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        const memberData = memberResponse.data;
 
-    // Gerar JWT com role
-    const jwtToken = require('./auth').generateToken(user, memberData.roles);
+        // Gerar JWT com role
+        const jwtToken = require('./auth').generateToken(user, memberData.roles);
 
-    // Redirecionar para o front com o token
-    res.redirect(`/?token=${jwtToken}`);
-  } catch (err) {
-    console.error('Erro no callback:', err.message);
-    if (err.response) {
-      console.error('Detalhes do erro Discord:', JSON.stringify(err.response.data, null, 2));
+        // Redirecionar para o front com o token
+        res.redirect(`/?token=${jwtToken}`);
+    } catch (err) {
+        console.error('Erro no callback:', err.message);
+        if (err.response) {
+            console.error('Detalhes do erro Discord:', JSON.stringify(err.response.data, null, 2));
+        }
+        res.status(500).send('Erro ao autenticar com Discord. Verifique o console do servidor.');
     }
-    res.status(500).send('Erro ao autenticar com Discord. Verifique o console do servidor.');
-  }
 });
 
 // --- ROTAS DE PROTOCOLOS ---
@@ -212,16 +212,17 @@ api.get('/status', auth.authMiddleware, (req, res) => {
 api.post('/protocolos', auth.authMiddleware, (req, res) => {
     try {
         const { piloto, veiculo, link, data, inicio, fim, status } = req.body;
-        
+        const normalizedStatus = (status || 'FINALIZADO').toUpperCase();
+
         let duracao = 0;
-        if (fim && status !== 'ABERTO') {
+        if (fim && normalizedStatus !== 'ABERTO') {
             const d1 = new Date(`${data}T${inicio}`);
             let d2 = new Date(`${data}T${fim}`);
             if (d2 < d1) d2.setDate(d2.getDate() + 1);
             duracao = Math.floor((d2 - d1) / 1000);
         }
 
-        const statusId = getStatusId(status || 'FINALIZADO');
+        const statusId = getStatusId(normalizedStatus);
 
         const stmt = db.prepare(`
             INSERT INTO protocolos (piloto, veiculo, link, data, inicio, fim, duracao, status_id)
@@ -231,8 +232,12 @@ api.post('/protocolos', auth.authMiddleware, (req, res) => {
 
         db.prepare('INSERT OR IGNORE INTO pilotos (nome) VALUES (?)').run(piloto);
 
-        db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
-          .run(info.lastInsertRowid, 'CREATE', req.user.username || 'System', JSON.stringify(req.body));
+        try {
+            db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
+                .run(info.lastInsertRowid, 'CREATE', req.user.username || 'System', JSON.stringify(req.body));
+        } catch (auditErr) {
+            console.warn('Audit insert failed:', auditErr.message);
+        }
 
         res.json({ id: info.lastInsertRowid, message: 'Protocolo criado' });
     } catch (err) {
@@ -246,16 +251,17 @@ api.put('/protocolos/:id', auth.authMiddleware, (req, res) => {
     try {
         const { id } = req.params;
         const { piloto, veiculo, link, data, inicio, fim, status } = req.body;
+        const normalizedStatus = (status || 'FINALIZADO').toUpperCase();
 
         let duracao = 0;
-        if (fim && status !== 'ABERTO') {
+        if (fim && normalizedStatus !== 'ABERTO') {
             const d1 = new Date(`${data}T${inicio}`);
             let d2 = new Date(`${data}T${fim}`);
             if (d2 < d1) d2.setDate(d2.getDate() + 1);
             duracao = Math.floor((d2 - d1) / 1000);
         }
 
-        const statusId = getStatusId(status);
+        const statusId = getStatusId(normalizedStatus);
 
         const stmt = db.prepare(`
             UPDATE protocolos 
@@ -264,8 +270,12 @@ api.put('/protocolos/:id', auth.authMiddleware, (req, res) => {
         `);
         stmt.run(piloto, veiculo, link, data, inicio, fim || '', duracao, statusId, id);
 
-        db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
-          .run(id, 'UPDATE', req.user.username || 'System', JSON.stringify(req.body));
+        try {
+            db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
+                .run(id, 'UPDATE', req.user.username || 'System', JSON.stringify(req.body));
+        } catch (auditErr) {
+            console.warn('Audit insert failed:', auditErr.message);
+        }
 
         res.json({ message: 'Atualizado com sucesso' });
     } catch (err) {
@@ -278,6 +288,7 @@ api.put('/protocolos/:id/finalizar', auth.authMiddleware, (req, res) => {
     try {
         const { id } = req.params;
         const { fim, status } = req.body;
+        const normalizedStatus = (status || 'FINALIZADO').toUpperCase();
 
         const current = db.prepare('SELECT * FROM protocolos WHERE id = ?').get(id);
         if (!current) return res.status(404).json({ error: 'Protocolo não encontrado' });
@@ -287,13 +298,17 @@ api.put('/protocolos/:id/finalizar', auth.authMiddleware, (req, res) => {
         if (d2 < d1) d2.setDate(d2.getDate() + 1);
         const duracao = Math.floor((d2 - d1) / 1000);
 
-        const statusId = getStatusId(status || 'FINALIZADO');
+        const statusId = getStatusId(normalizedStatus);
 
         db.prepare('UPDATE protocolos SET fim=?, duracao=?, status_id=? WHERE id=?')
-          .run(fim, duracao, statusId, id);
+            .run(fim, duracao, statusId, id);
 
-        db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
-          .run(id, 'FINALIZE', req.user.username || 'System', JSON.stringify({ fim, duracao }));
+        try {
+            db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
+                .run(id, 'FINALIZE', req.user.username || 'System', JSON.stringify({ fim, duracao }));
+        } catch (auditErr) {
+            console.warn('Audit insert failed:', auditErr.message);
+        }
 
         res.json({ message: 'Protocolo finalizado' });
     } catch (err) {
@@ -387,7 +402,7 @@ DISCORD_CLIENT.login(process.env.DISCORD_TOKEN).catch(e => console.error("Erro B
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    
+
     // Iniciar o sincronizador de protocolos
     try {
         discordSync.initializeSync();

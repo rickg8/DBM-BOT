@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-secret-super-seguro';
+const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true' || process.env.DISABLE_LOGIN === 'true';
 const ADMIN_IDS = ['1324784566854221895', '554409578486431794']; // Richard e Breno
 
 const ROLES = {
@@ -30,19 +31,19 @@ function getUserRole(discordId, memberData = null) {
     if (ADMIN_IDS.includes(discordId)) {
         return ROLES.ADMIN;
     }
-    
+
     // Se o bot encontrou os cargos do usuário no servidor
     if (memberData && memberData.roles && Array.isArray(memberData.roles)) {
         // Verificar se tem algum cargo de equipe
-        const hasEquipeRole = memberData.roles.some(roleId => 
+        const hasEquipeRole = memberData.roles.some(roleId =>
             Object.values(ROLE_IDS).includes(roleId)
         );
-        
+
         if (hasEquipeRole) {
             return ROLES.EQUIPE;
         }
     }
-    
+
     // Usuário padrão (piloto sem cargo)
     return ROLES.USER;
 }
@@ -55,7 +56,7 @@ function getUserRole(discordId, memberData = null) {
  */
 function generateToken(user, roles = []) {
     const role = getUserRole(user.id, { roles });
-    
+
     return jwt.sign(
         {
             id: user.id,
@@ -88,26 +89,31 @@ function verifyToken(token) {
  * Middleware de autenticação - verifica se o token é válido
  */
 function authMiddleware(req, res, next) {
+    if (DISABLE_AUTH) {
+        req.user = { id: 'dev', username: 'dev', role: ROLES.ADMIN };
+        return next();
+    }
+
     let token = req.headers.authorization?.split(' ')[1] || req.query.token;
-    
+
     // Se não achou no header, tenta pegar do cookie
     if (!token && req.headers.cookie) {
         const match = req.headers.cookie.match(/auth_token=([^;]+)/);
         if (match) token = match[1];
     }
-    
+
     if (!token) {
-        return res.status(401).json({ 
-            error: 'Acesso negado. Faça login para continuar.', 
-            code: 'NO_AUTH' 
+        return res.status(401).json({
+            error: 'Acesso negado. Faça login para continuar.',
+            code: 'NO_AUTH'
         });
     }
 
     const decoded = verifyToken(token);
     if (!decoded) {
-        return res.status(401).json({ 
-            error: 'Sessão expirada. Faça login novamente.', 
-            code: 'INVALID_TOKEN' 
+        return res.status(401).json({
+            error: 'Sessão expirada. Faça login novamente.',
+            code: 'INVALID_TOKEN'
         });
     }
 
@@ -121,7 +127,7 @@ function authMiddleware(req, res, next) {
 function adminMiddleware(req, res, next) {
     authMiddleware(req, res, () => {
         if (req.user.role !== ROLES.ADMIN) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'Somente o Comando DBM (Admins) pode realizar esta ação.',
                 code: 'FORBIDDEN',
                 requiredRole: 'admin',
@@ -138,7 +144,7 @@ function adminMiddleware(req, res, next) {
 function equipeMiddleware(req, res, next) {
     authMiddleware(req, res, () => {
         if (req.user.role !== ROLES.ADMIN && req.user.role !== ROLES.EQUIPE) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'Você precisa ser membro da Equipe DBM para realizar esta ação.',
                 code: 'FORBIDDEN',
                 requiredRole: 'equipe ou admin',

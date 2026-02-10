@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>DBM - Dashboard</title>
     <script src="/auth-check.js"></script>
+    <script src="js/ui.js"></script>
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
     <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
@@ -22,11 +23,13 @@
         <a href="ranking.html">Ranking</a>
         <a class="active" href="dashboard.html">Dashboard</a>
       </nav>
-      <div style="display: flex; gap: 10px">
+      <div style="display: flex; gap: 10px; align-items: center">
+        <div id="sessionStatus"></div>
         <a class="pill" href="index.html">+ Registrar novo</a>
         <button
           class="pill"
-          onclick="logout()"
+          id="logoutBtn"
+          aria-label="Sair da sessão"
           style="background: #e74c3c; border: none; cursor: pointer"
         >
           🚪 Logout
@@ -58,7 +61,20 @@
       <section class="panel">
         <div class="panel-header">
           <h2>Resumo</h2>
-          <p class="muted">Totais rápidos do evento</p>
+          <div class="toolbar">
+            <div class="chip-row" id="statusChips">
+              <button class="chip active" data-status="">Todos</button>
+              <button class="chip" data-status="ABERTO">Abertos</button>
+              <button class="chip" data-status="FINALIZADO">Finalizados</button>
+              <button class="chip" data-status="ADVERTENCIA">
+                Advertências
+              </button>
+            </div>
+            <div class="field-group" style="max-width: 320px">
+              <input type="date" id="dateStart" aria-label="Data inicial" />
+              <input type="date" id="dateEnd" aria-label="Data final" />
+            </div>
+          </div>
         </div>
         <div class="cards-grid" id="summaryCards"></div>
       </section>

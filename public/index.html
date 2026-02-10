@@ -6,16 +6,21 @@
     <script>
       // Capturar token ANTES de qualquer verificação
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      
+      const token = urlParams.get("token");
+
       if (token) {
-        localStorage.setItem('auth_token', token);
+        localStorage.setItem("auth_token", token);
         document.cookie = `auth_token=${token}; path=/; max-age=604800; SameSite=Strict`;
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
         console.log("✅ Token OAuth2 capturado e salvo!");
       }
     </script>
     <script src="/auth-check.js"></script>
+    <script src="js/ui.js"></script>
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/index.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -38,9 +43,11 @@
       <div class="top-actions">
         <span class="pill badge" id="openBadge">Abertos: 0</span>
         <a class="pill" href="dashboard.html">Ver painel</a>
+        <div id="sessionStatus"></div>
         <button
           class="pill"
-          onclick="logout()"
+          id="logoutBtn"
+          aria-label="Sair da sessão"
           style="background: #e74c3c; border: none; cursor: pointer"
         >
           🚪 Logout
@@ -250,7 +257,7 @@
       // Função de Logout
       function logout() {
         window.clearAuth();
-        window.location.href = 'login.html';
+        window.location.href = "login.html";
       }
     </script>
   </body>

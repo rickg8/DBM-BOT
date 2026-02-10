@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>DBM - Ranking</title>
     <script src="/auth-check.js"></script>
+    <script src="js/ui.js"></script>
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/ranking.css" />
     <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
@@ -22,11 +23,13 @@
         <a class="active" href="ranking.html">Ranking</a>
         <a href="dashboard.html">Dashboard</a>
       </nav>
-      <div style="display: flex; gap: 10px">
+      <div style="display: flex; gap: 10px; align-items: center">
+        <div id="sessionStatus"></div>
         <a class="pill" href="index.html">Registrar protocolo</a>
         <button
           class="pill"
-          onclick="logout()"
+          id="logoutBtn"
+          aria-label="Sair da sessão"
           style="background: #e74c3c; border: none; cursor: pointer"
         >
           🚪 Logout
@@ -55,7 +58,15 @@
       <section class="panel">
         <div class="panel-header">
           <h2>Ranking por horas</h2>
-          <p class="muted">Ordenado do maior para o menor</p>
+          <div class="field-group" style="align-items: center">
+            <input
+              type="text"
+              id="rankingSearch"
+              placeholder="Buscar piloto"
+              aria-label="Buscar piloto no ranking"
+            />
+            <button class="pill" id="highlightMe">Destacar meu usuário</button>
+          </div>
         </div>
         <ol id="rankingList"></ol>
       </section>

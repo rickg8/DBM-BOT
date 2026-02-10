@@ -92,7 +92,15 @@ function authFetch(url, options = {}) {
         'Authorization': `Bearer ${token}`
     };
 
-    return fetch(url, { ...options, headers });
+    return fetch(url, { ...options, headers }).then(res => {
+        if (res.status === 401) {
+            console.warn('[AUTH] Sessão expirada ou inválida');
+            if (window.clearAuth) window.clearAuth();
+            window.location.href = '/login.html';
+            throw new Error('Sessão expirada');
+        }
+        return res;
+    });
 }
 
 async function fetchPilotos() {

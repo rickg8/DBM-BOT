@@ -52,8 +52,8 @@ module.exports = {
     // Configurações do comando
     command: {
         prefix: '/',
-        name: 'hierarquia',
-        aliases: ['hierarquia', 'hierarchy', 'rank'],
+        name: 'hierarquia dbm',
+        aliases: ['hierarquia dbm', 'hierarchy', 'rank'],
         description: 'Mostra a hierarquia completa da organização'
     }
 };

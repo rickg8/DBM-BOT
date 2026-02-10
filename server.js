@@ -8,6 +8,7 @@ const axios = require('axios');
 const { Client, GatewayIntentBits } = require('discord.js');
 const auth = require('./auth');
 const hierarchyConfig = require('./hierarchy-config');
+const discordSync = require('./discordSync');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -167,14 +168,152 @@ api.get('/callback', async (req, res) => {
 
 // --- ROTAS DE PROTOCOLOS ---
 api.get('/protocolos', auth.authMiddleware, (req, res) => {
-    const protocolos = db.prepare(`
-        SELECT p.id, p.piloto, p.veiculo, p.link, p.data, p.inicio, p.fim, p.duracao, p.status_id, s.nome as status, p.created_at
-        FROM protocolos p LEFT JOIN status s ON s.id = p.status_id ORDER BY p.id DESC
-    `).all();
-    res.json(protocolos);
+    try {
+        const protocolos = db.prepare(`
+            SELECT p.id, p.piloto, p.veiculo, p.link, p.data, p.inicio, p.fim, p.duracao, p.status_id, s.nome as status, p.created_at
+            FROM protocolos p LEFT JOIN status s ON s.id = p.status_id ORDER BY p.id DESC
+        `).all();
+        res.json(protocolos);
+    } catch (err) {
+        console.error('Erro CRÍTICO ao buscar protocolos:', err.message);
+        res.status(500).json({ error: 'Erro de banco de dados. Por favor, resete o banco.' });
+    }
 });
 
-// (demais rotas mantidas iguais...)
+// Listar Pilotos
+api.get('/pilotos', auth.authMiddleware, (req, res) => {
+    try {
+        let pilotos = db.prepare('SELECT nome, cor FROM pilotos').all();
+        if (pilotos.length === 0) {
+            const distinct = db.prepare('SELECT DISTINCT piloto as nome FROM protocolos').all();
+            pilotos = distinct.map(p => ({ nome: p.nome, cor: '#6b7280' }));
+        }
+        res.json(pilotos);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Listar Veículos
+api.get('/veiculos', auth.authMiddleware, (req, res) => {
+    try {
+        const veiculos = db.prepare('SELECT nome FROM veiculos').all();
+        res.json(veiculos);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Listar Status
+api.get('/status', auth.authMiddleware, (req, res) => {
+    try {
+        const status = db.prepare('SELECT nome FROM status').all();
+        res.json(status);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Criar Protocolo (Usado pelo Sincronizador)
+api.post('/protocolos', auth.authMiddleware, (req, res) => {
+    try {
+        const { piloto, veiculo, link, data, inicio, fim, status } = req.body;
+        
+        let duracao = 0;
+        if (fim && status !== 'ABERTO') {
+            const d1 = new Date(`${data}T${inicio}`);
+            let d2 = new Date(`${data}T${fim}`);
+            if (d2 < d1) d2.setDate(d2.getDate() + 1);
+            duracao = Math.floor((d2 - d1) / 1000);
+        }
+
+        const statusId = getStatusId(status || 'FINALIZADO');
+
+        const stmt = db.prepare(`
+            INSERT INTO protocolos (piloto, veiculo, link, data, inicio, fim, duracao, status_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        const info = stmt.run(piloto, veiculo, link, data, inicio, fim || '', duracao, statusId);
+
+        db.prepare('INSERT OR IGNORE INTO pilotos (nome) VALUES (?)').run(piloto);
+
+        db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
+          .run(info.lastInsertRowid, 'CREATE', req.user.username || 'System', JSON.stringify(req.body));
+
+        res.json({ id: info.lastInsertRowid, message: 'Protocolo criado' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Editar Protocolo
+api.put('/protocolos/:id', auth.authMiddleware, (req, res) => {
+    try {
+        const { id } = req.params;
+        const { piloto, veiculo, link, data, inicio, fim, status } = req.body;
+
+        let duracao = 0;
+        if (fim && status !== 'ABERTO') {
+            const d1 = new Date(`${data}T${inicio}`);
+            let d2 = new Date(`${data}T${fim}`);
+            if (d2 < d1) d2.setDate(d2.getDate() + 1);
+            duracao = Math.floor((d2 - d1) / 1000);
+        }
+
+        const statusId = getStatusId(status);
+
+        const stmt = db.prepare(`
+            UPDATE protocolos 
+            SET piloto=?, veiculo=?, link=?, data=?, inicio=?, fim=?, duracao=?, status_id=?
+            WHERE id=?
+        `);
+        stmt.run(piloto, veiculo, link, data, inicio, fim || '', duracao, statusId, id);
+
+        db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
+          .run(id, 'UPDATE', req.user.username || 'System', JSON.stringify(req.body));
+
+        res.json({ message: 'Atualizado com sucesso' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Finalizar Protocolo
+api.put('/protocolos/:id/finalizar', auth.authMiddleware, (req, res) => {
+    try {
+        const { id } = req.params;
+        const { fim, status } = req.body;
+
+        const current = db.prepare('SELECT * FROM protocolos WHERE id = ?').get(id);
+        if (!current) return res.status(404).json({ error: 'Protocolo não encontrado' });
+
+        const d1 = new Date(`${current.data}T${current.inicio}`);
+        let d2 = new Date(`${current.data}T${fim}`);
+        if (d2 < d1) d2.setDate(d2.getDate() + 1);
+        const duracao = Math.floor((d2 - d1) / 1000);
+
+        const statusId = getStatusId(status || 'FINALIZADO');
+
+        db.prepare('UPDATE protocolos SET fim=?, duracao=?, status_id=? WHERE id=?')
+          .run(fim, duracao, statusId, id);
+
+        db.prepare('INSERT INTO protocolos_audit (protocolo_id, action, actor, payload) VALUES (?, ?, ?, ?)')
+          .run(id, 'FINALIZE', req.user.username || 'System', JSON.stringify({ fim, duracao }));
+
+        res.json({ message: 'Protocolo finalizado' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Deletar Protocolo
+api.delete('/protocolos/:id', auth.authMiddleware, (req, res) => {
+    try {
+        const { id } = req.params;
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Apenas administradores podem deletar protocolos.' });
+        }
+        db.prepare('DELETE FROM protocolos WHERE id=?').run(id);
+        res.json({ message: 'Deletado com sucesso' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.use('/api/v1', api);
 app.use(express.static(PUBLIC_DIR));
@@ -248,4 +387,11 @@ DISCORD_CLIENT.login(process.env.DISCORD_TOKEN).catch(e => console.error("Erro B
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    
+    // Iniciar o sincronizador de protocolos
+    try {
+        discordSync.initializeSync();
+    } catch (e) {
+        console.error('Falha ao iniciar sincronizador:', e.message);
+    }
 });

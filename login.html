@@ -151,7 +151,7 @@
                     autocomplete="off"
                 >
             </div>
-           <a href="https://discord.com/oauth2/authorize?client_id=1469882501475602453&response_type=code&redirect_uri=https%3A%2F%2Fodd-deanne-richard7-d040cbf1.koyeb.app%2Fapi%2Fcallback&scope=identify+guilds">
+           <a href="https://discord.com/oauth2/authorize?client_id=1469882501475602453&response_type=code&redirect_uri=https%3A%2F%2Fodd-deanne-richard7-d040cbf1.koyeb.app%2Flogin.html&scope=guilds+identify">
    🔐 Entrar com Discord
 </a>
         </form>
@@ -193,43 +193,9 @@
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
 
-            // Validar ID
-            if (!discordId || discordId === '') {
-                showError('Por favor, insira seu Discord ID');
-                return;
-            }
+           
 
-            if (!isValidDiscordId(discordId)) {
-                showError('Discord ID deve conter apenas números');
-                return;
-            }
-
-            // Desabilitar botão
-            loginBtn.disabled = true;
-            loadingDiv.style.display = 'block';
-
-            try {
-                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                    ? `http://localhost:3001/api/v1/login`
-                    : `/api/v1/login`;
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        discordId: discordId,
-                        username: `User_${discordId}`,
-                        avatar: 'https://cdn.discordapp.com/embed/avatars/0.png'
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Erro ao fazer login');
-                }
+           
 
                 // Salvar token em localStorage E em cookie
                 localStorage.setItem('auth_token', data.token);
@@ -255,7 +221,6 @@
                 loginBtn.disabled = false;
                 loadingDiv.style.display = 'none';
             }
-        }
 
         function isValidDiscordId(id) {
             return /^\d+$/.test(id);

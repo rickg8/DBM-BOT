@@ -122,7 +122,7 @@ body {
 .dropdown-item {
   width: 100%;
   border: none;
-  background: transparent;
+  background: red;
   color: var(--text);
   padding: 10px 12px;
   text-align: left;
@@ -212,7 +212,7 @@ body {
 }
 
 .sidebar-footer {
-  margin-top: auto;
+  margin-top: 37rem;
   padding-top: 10px;
 }
 
@@ -516,6 +516,7 @@ h1 {
   border-radius: 10px;
   font-weight: 800;
   box-shadow: var(--glow);
+  width: 44px;
 }
 
 .brand-title {

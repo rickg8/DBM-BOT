@@ -72,7 +72,7 @@
             return;
         }
         const username = session.username || session.id || 'usuário';
-        target.innerHTML = `<div class="session-chip" aria-live="polite">Logado como <strong>@${username}</strong>${renderRoleBadge(session.role)}</div>`;
+        target.innerHTML = `<div class="session-chip" aria-live="polite"><strong>@${username}</strong>${renderRoleBadge(session.role)}</div>`;
     }
 
     function detectRoute() {

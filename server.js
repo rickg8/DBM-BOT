@@ -220,6 +220,9 @@ api.post('/protocolos', auth.authMiddleware, (req, res) => {
             let d2 = new Date(`${data}T${fim}`);
             if (d2 < d1) d2.setDate(d2.getDate() + 1);
             duracao = Math.floor((d2 - d1) / 1000);
+            if (!Number.isFinite(duracao)) {
+                return res.status(400).json({ error: 'Duração inválida para este horário.' });
+            }
         }
 
         const statusId = getStatusId(normalizedStatus);
@@ -259,6 +262,9 @@ api.put('/protocolos/:id', auth.authMiddleware, (req, res) => {
             let d2 = new Date(`${data}T${fim}`);
             if (d2 < d1) d2.setDate(d2.getDate() + 1);
             duracao = Math.floor((d2 - d1) / 1000);
+            if (!Number.isFinite(duracao)) {
+                return res.status(400).json({ error: 'Duração inválida para este horário.' });
+            }
         }
 
         const statusId = getStatusId(normalizedStatus);
@@ -290,6 +296,10 @@ api.put('/protocolos/:id/finalizar', auth.authMiddleware, (req, res) => {
         const { fim, status } = req.body;
         const normalizedStatus = (status || 'FINALIZADO').toUpperCase();
 
+        if (!fim || !/^\d{2}:\d{2}$/.test(fim)) {
+            return res.status(400).json({ error: 'Informe o horário de fim no formato HH:MM.' });
+        }
+
         const current = db.prepare('SELECT * FROM protocolos WHERE id = ?').get(id);
         if (!current) return res.status(404).json({ error: 'Protocolo não encontrado' });
 
@@ -297,6 +307,9 @@ api.put('/protocolos/:id/finalizar', auth.authMiddleware, (req, res) => {
         let d2 = new Date(`${current.data}T${fim}`);
         if (d2 < d1) d2.setDate(d2.getDate() + 1);
         const duracao = Math.floor((d2 - d1) / 1000);
+        if (!Number.isFinite(duracao) || duracao < 0) {
+            return res.status(400).json({ error: 'Duração inválida para este horário.' });
+        }
 
         const statusId = getStatusId(normalizedStatus);
 

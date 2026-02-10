@@ -778,6 +778,93 @@ body.nav-open {
   gap: 10px;
 }
 
+.filters-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.filters-primary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.filters-advanced {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.filters-advanced.collapsed {
+  display: none;
+}
+
+.range-field .range-inputs {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.range-sep {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.filters-active {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 26px;
+}
+
+.filter-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.9rem;
+}
+
+.filters-close {
+  display: none;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.filters-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 60;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.filters-backdrop.is-visible {
+  display: block;
+  opacity: 1;
+}
+
 .filters.collapsed {
   display: none;
 }
@@ -1392,6 +1479,37 @@ tbody tr:nth-child(even):not(.row-open) {
     align-items: center;
     justify-content: center;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .filters-shell {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 72vh;
+    overflow-y: auto;
+    background: #0b0b0d;
+    border-radius: 16px 16px 0 0;
+    border: 1px solid var(--border);
+    box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.5);
+    transform: translateY(110%);
+    transition: transform 0.22s ease;
+    padding-bottom: 16px;
+    z-index: 70;
+  }
+
+  .filters-shell.is-open {
+    transform: translateY(0);
+  }
+
+  .filters-primary,
+  .filters-advanced {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-close {
+    display: inline-flex;
+    justify-content: center;
   }
 }
 

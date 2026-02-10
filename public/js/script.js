@@ -14,6 +14,13 @@ const filterAplicar = document.getElementById("filterAplicar");
 const filterLimpar = document.getElementById("filterLimpar");
 const filterToggle = document.getElementById("filterToggle");
 const filtersPanel = document.getElementById("filtersPanel");
+const filtersShell = document.getElementById("filtersShell");
+const filtersAdvanced = document.getElementById("filtersAdvanced");
+const filtersActive = document.getElementById("filtersActive");
+const advancedToggle = document.getElementById("advancedToggle");
+const filterDrawerOpen = document.getElementById("filterDrawerOpen");
+const filterDrawerClose = document.getElementById("filterDrawerClose");
+const filtersBackdrop = document.getElementById("filtersBackdrop");
 const exportCsvBtn = document.getElementById("exportCsv");
 const openBadge = document.getElementById("openBadge");
 const openDrawerBtn = document.getElementById("openDrawer");
@@ -288,7 +295,9 @@ function applyFilters() {
     if (sorter) filteredProtocols.sort(sorter);
 
     saveFilters();
+    renderActiveFilters();
     renderPilotCards();
+    toggleFilterDrawer(false);
 }
 
 function saveFilters() {
@@ -318,9 +327,35 @@ function restoreFilters() {
         if (filterOrdenacao) filterOrdenacao.value = payload.ordenacao || 'data_desc';
         if (filterDataInicio) filterDataInicio.value = payload.dataInicio || '';
         if (filterDataFim) filterDataFim.value = payload.dataFim || '';
+        renderActiveFilters();
     } catch (err) {
         console.warn('Não foi possível restaurar filtros', err);
     }
+}
+
+function renderActiveFilters() {
+    if (!filtersActive) return;
+    const chips = [];
+    const pilot = filterPiloto?.value;
+    const status = filterStatus?.value;
+    const busca = filterBusca?.value?.trim();
+    const sort = filterOrdenacao?.value;
+    const start = filterDataInicio?.value;
+    const end = filterDataFim?.value;
+
+    if (pilot) chips.push({ label: 'Piloto', value: pilot });
+    if (status) chips.push({ label: 'Status', value: status });
+    if (start || end) chips.push({ label: 'Período', value: `${start || '...'} → ${end || '...'}` });
+    if (busca) chips.push({ label: 'Busca', value: busca });
+    if (sort && sort !== 'data_desc') chips.push({ label: 'Ordenação', value: sort });
+
+    if (!chips.length) {
+        filtersActive.innerHTML = '<span class="muted">Nenhum filtro aplicado</span>';
+        return;
+    }
+
+    const markup = chips.map(c => `<span class="filter-chip"><strong>${c.label}:</strong> ${c.value}</span>`).join('');
+    filtersActive.innerHTML = `<div class="filter-chip-row">${markup}</div>`;
 }
 
 filterAplicar?.addEventListener("click", applyFilters);
@@ -333,6 +368,7 @@ filterLimpar?.addEventListener("click", () => {
     if (filterDataFim) filterDataFim.value = "";
     filteredProtocols = [];
     saveFilters();
+    renderActiveFilters();
     renderPilotCards();
 });
 
@@ -341,6 +377,29 @@ filterToggle?.addEventListener("click", () => {
     const isCollapsed = filtersPanel.classList.toggle("collapsed");
     if (filterToggle) filterToggle.textContent = isCollapsed ? "Mostrar filtros" : "Ocultar filtros";
 });
+
+advancedToggle?.addEventListener("click", () => {
+    if (!filtersAdvanced) return;
+    const isCollapsed = filtersAdvanced.classList.toggle("collapsed");
+    advancedToggle.textContent = isCollapsed ? "Filtros avançados" : "Ocultar avançados";
+});
+
+function toggleFilterDrawer(open) {
+    const shouldOpen = open ?? !filtersShell?.classList.contains("is-open");
+    if (shouldOpen) {
+        filtersShell?.classList.add("is-open");
+        filtersBackdrop?.classList.add("is-visible");
+        document.body.classList.add("filters-open");
+    } else {
+        filtersShell?.classList.remove("is-open");
+        filtersBackdrop?.classList.remove("is-visible");
+        document.body.classList.remove("filters-open");
+    }
+}
+
+filterDrawerOpen?.addEventListener("click", () => toggleFilterDrawer(true));
+filterDrawerClose?.addEventListener("click", () => toggleFilterDrawer(false));
+filtersBackdrop?.addEventListener("click", () => toggleFilterDrawer(false));
 
 /* =========================
    RENDERIZAÇÃO

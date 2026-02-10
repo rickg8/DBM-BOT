@@ -20,6 +20,17 @@ const ROLE_IDS = {
     // STAFF: '987654321098765432',
 };
 
+function buildDiscordAvatarUrl(user = {}) {
+    // Se o Discord retornar um avatar customizado, monta a URL oficial do CDN
+    if (user.avatar) {
+        return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
+    }
+    // Fallback: usa avatar padrão baseado em um índice pseudoaleatório do id/discriminator
+    const seed = Number(user.discriminator ?? (user.id ? user.id.slice(-1) : 0)) || 0;
+    const idx = Math.abs(seed) % 5;
+    return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
+}
+
 /**
  * Determina o role do usuário baseado no Discord ID e nos cargos do servidor
  * @param {string} discordId - ID do usuário no Discord
@@ -56,12 +67,14 @@ function getUserRole(discordId, memberData = null) {
  */
 function generateToken(user, roles = []) {
     const role = getUserRole(user.id, { roles });
+    const avatarUrl = buildDiscordAvatarUrl(user);
 
     return jwt.sign(
         {
             id: user.id,
             username: user.username,
-            avatar: user.avatar,
+            avatar: avatarUrl,
+            avatarUrl,
             role: role,
             iat: Math.floor(Date.now() / 1000),
             exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 dias

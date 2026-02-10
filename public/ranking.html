@@ -9,69 +9,138 @@
     <link rel="stylesheet" href="css/ranking.css" />
     <link rel="icon" type="image/png" href="assets/favicon/favicon-32x32.png" />
   </head>
-  <body class="page-shell ranking-page">
-    <header class="topbar">
-      <div class="brand">
+  <body class="app-shell ranking-page" data-route="ranking">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
         <span class="brand-mark">DBM</span>
         <div>
-          <div class="brand-title">Evento de Patrulha</div>
-          <div class="brand-sub">Quem mais acumulou horas</div>
+          <div class="brand-title">Bombeiros RevoadaRJ</div>
+          <div class="brand-sub">Patrulha</div>
         </div>
-      </div>
-      <nav class="topnav">
-        <a href="index.html">Protocolos</a>
-        <a class="active" href="ranking.html">Ranking</a>
-        <a href="dashboard.html">Dashboard</a>
-      </nav>
-      <div style="display: flex; gap: 10px; align-items: center">
-        <div id="sessionStatus"></div>
-        <a class="pill" href="index.html">Registrar protocolo</a>
         <button
-          class="pill"
-          id="logoutBtn"
-          aria-label="Sair da sessão"
-          style="background: #e74c3c; border: none; cursor: pointer"
+          class="sidebar-close"
+          id="sidebarClose"
+          aria-label="Fechar menu"
         >
-          🚪 Logout
+          ✕
         </button>
       </div>
-    </header>
 
-    <main class="page-content">
-      <section class="hero">
-        <div>
-          <p class="eyebrow">Comparativo</p>
-          <h1>🏆 Ranking do Evento</h1>
-          <p class="lede">Veja os pilotos com mais horas acumuladas.</p>
-          <div class="hero-actions">
-            <a class="pill" href="dashboard.html">Abrir dashboard</a>
-            <a class="pill ghost" href="index.html">Registrar protocolo</a>
+      <div class="sidebar-section">
+        <p class="sidebar-section-title">PRINCIPAL</p>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" data-route="dashboard" href="dashboard.html"
+            >Dashboard</a
+          >
+          <a class="sidebar-link" data-route="protocolos" href="index.html"
+            >Cadastro de Protocolo</a
+          >
+          <a
+            class="sidebar-link active"
+            data-route="ranking"
+            href="ranking.html"
+            >Ranking</a
+          >
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div
+            class="avatar avatar-md"
+            id="sidebarAvatar"
+            aria-hidden="true"
+          ></div>
+          <div class="user-meta">
+            <div class="user-name" id="sidebarUsername">Usuário</div>
+            <div class="user-role-line">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span class="user-role" id="sidebarRole">Conectado</span>
+            </div>
           </div>
         </div>
-        <div class="hero-card">
-          <p class="muted">Atualizado</p>
-          <h3 class="hero-highlight">Ao vivo</h3>
-          <p class="muted">Dados carregados da API</p>
-        </div>
-      </section>
+      </div>
+    </aside>
 
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Ranking por horas</h2>
-          <div class="field-group" style="align-items: center">
-            <input
-              type="text"
-              id="rankingSearch"
-              placeholder="Buscar piloto"
-              aria-label="Buscar piloto no ranking"
-            />
-            <button class="pill" id="highlightMe">Destacar meu usuário</button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="app-content">
+      <header class="app-topbar">
+        <button
+          class="icon-button sidebar-toggle"
+          id="sidebarToggle"
+          aria-label="Abrir menu de navegação"
+        >
+          <span class="icon-hamb"></span>
+        </button>
+        <div class="topbar-actions">
+          <div id="sessionStatus"></div>
+          <a class="pill" href="index.html">Registrar protocolo</a>
+          <div class="avatar-menu">
+            <button
+              class="avatar-button"
+              id="topbarAvatarBtn"
+              aria-label="Abrir menu do usuário"
+              aria-haspopup="menu"
+              aria-expanded="false"
+            >
+              <div
+                class="avatar avatar-sm"
+                id="topbarAvatar"
+                aria-hidden="true"
+              ></div>
+            </button>
+            <div class="dropdown-menu" id="userDropdown" role="menu">
+              <button class="dropdown-item" id="logoutAction">Sair</button>
+            </div>
           </div>
         </div>
-        <ol id="rankingList"></ol>
-      </section>
-    </main>
+      </header>
+
+      <main class="page-content">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Comparativo</p>
+            <h1>🏆 Ranking do Evento</h1>
+            <p class="lede">Veja os pilotos com mais horas acumuladas.</p>
+            <div class="hero-actions">
+              <a class="pill" href="dashboard.html">Abrir dashboard</a>
+              <a class="pill ghost" href="index.html">Registrar protocolo</a>
+            </div>
+          </div>
+          <div class="hero-card">
+            <p class="muted">Atualizado</p>
+            <h3 class="hero-highlight">Ao vivo</h3>
+            <p class="muted">Dados carregados da API</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Ranking por horas</h2>
+            <div class="field-group" style="align-items: center">
+              <input
+                type="text"
+                id="rankingSearch"
+                placeholder="Buscar piloto"
+                aria-label="Buscar piloto no ranking"
+              />
+              <button class="pill" id="highlightMe">
+                Destacar meu usuário
+              </button>
+            </div>
+          </div>
+          <ol id="rankingList"></ol>
+        </section>
+      </main>
+    </div>
 
     <script src="js/ranking.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (window.uiHelpers)
+          window.uiHelpers.initShellLayout({ route: "ranking" });
+      });
+    </script>
   </body>
 </html>

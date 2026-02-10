@@ -75,6 +75,114 @@
         target.innerHTML = `<div class="session-chip" aria-live="polite">Logado como <strong>@${username}</strong>${renderRoleBadge(session.role)}</div>`;
     }
 
+    function detectRoute() {
+        const path = window.location.pathname;
+        if (path.includes('dashboard')) return 'dashboard';
+        if (path.includes('ranking')) return 'ranking';
+        return 'protocolos';
+    }
+
+    function initialsFromName(name) {
+        if (!name) return 'US';
+        const parts = name.trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return 'US';
+        const first = parts[0]?.[0] || '';
+        const last = parts.length > 1 ? parts[parts.length - 1]?.[0] || '' : '';
+        return `${first}${last}`.toUpperCase() || 'US';
+    }
+
+    function applyAvatar(el, session) {
+        if (!el) return;
+        const avatarUrl = session?.avatar || session?.picture || session?.avatarUrl;
+        const fallback = initialsFromName(session?.username || session?.name || 'Usuário');
+        el.textContent = fallback;
+        el.classList.remove('has-photo');
+        el.style.backgroundImage = 'none';
+        if (avatarUrl) {
+            el.style.backgroundImage = `url(${avatarUrl})`;
+            el.classList.add('has-photo');
+        }
+    }
+
+    function populateShellUser(session) {
+        const name = session?.username || session?.name || 'Usuário';
+        const role = roleLabel(session?.role);
+        const sidebarName = document.getElementById('sidebarUsername');
+        const sidebarRole = document.getElementById('sidebarRole');
+        if (sidebarName) sidebarName.textContent = name;
+        if (sidebarRole) sidebarRole.textContent = role || 'Conectado';
+
+        applyAvatar(document.getElementById('sidebarAvatar'), session);
+        applyAvatar(document.getElementById('topbarAvatar'), session);
+    }
+
+    function initShellLayout(options = {}) {
+        const route = options.route || detectRoute();
+        const session = getSession();
+        populateShellUser(session);
+
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const toggle = document.getElementById('sidebarToggle');
+        const closeBtn = document.getElementById('sidebarClose');
+        const avatarBtn = document.getElementById('topbarAvatarBtn');
+        const dropdown = document.getElementById('userDropdown');
+        const logoutAction = document.getElementById('logoutAction');
+
+        const openSidebar = () => {
+            sidebar?.classList.add('is-open');
+            backdrop?.classList.add('is-visible');
+        };
+
+        const closeSidebar = () => {
+            sidebar?.classList.remove('is-open');
+            backdrop?.classList.remove('is-visible');
+        };
+
+        toggle?.addEventListener('click', () => {
+            const isOpen = sidebar?.classList.contains('is-open');
+            isOpen ? closeSidebar() : openSidebar();
+        });
+
+        closeBtn?.addEventListener('click', closeSidebar);
+        backdrop?.addEventListener('click', closeSidebar);
+
+        const navLinks = document.querySelectorAll('.sidebar-link');
+        navLinks.forEach(link => {
+            const linkRoute = link.dataset.route;
+            if (linkRoute === route) link.classList.add('active');
+            link.addEventListener('click', closeSidebar);
+        });
+
+        const closeDropdown = () => {
+            if (!dropdown || !avatarBtn) return;
+            dropdown.classList.remove('open');
+            avatarBtn.setAttribute('aria-expanded', 'false');
+        };
+
+        avatarBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown?.classList.contains('open');
+            dropdown?.classList.toggle('open', !isOpen);
+            avatarBtn.setAttribute('aria-expanded', (!isOpen).toString());
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdown || !avatarBtn) return;
+            if (dropdown.contains(e.target) || avatarBtn.contains(e.target)) return;
+            closeDropdown();
+        });
+
+        logoutAction?.addEventListener('click', async () => {
+            const ok = await confirmLogout();
+            if (!ok) return;
+            if (typeof options.onLogout === 'function') return options.onLogout();
+            if (typeof window.logout === 'function') return window.logout();
+            window.clearAuth?.();
+            window.location.href = '/login.html';
+        });
+    }
+
     function setButtonLoading(btn, isLoading, labelWhile) {
         if (!btn) return;
         if (isLoading) {
@@ -110,5 +218,6 @@
         renderRoleBadge,
         setButtonLoading,
         confirmLogout,
+        initShellLayout,
     };
 })();

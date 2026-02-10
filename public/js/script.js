@@ -226,7 +226,7 @@ async function confirmDelete() {
             showCancelButton: true,
             confirmButtonText: 'Apagar',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ef4444',
+            confirmButtonColor: '#1e4db7',
             cancelButtonColor: '#4b5563',
             reverseButtons: true,
         });

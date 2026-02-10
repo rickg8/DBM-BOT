@@ -132,34 +132,44 @@
         const dropdown = document.getElementById('userDropdown');
         const logoutAction = document.getElementById('logoutAction');
 
-        const openSidebar = () => {
-            sidebar?.classList.add('is-open');
-            backdrop?.classList.add('is-visible');
-            toggle?.classList.add('is-active');
-            document.body.classList.add('nav-open');
+        const mqMobile = window.matchMedia('(max-width: 960px)');
+
+        const setSidebarState = (open) => {
+            if (!sidebar) return;
+            if (mqMobile.matches) {
+                sidebar.classList.toggle('is-open', open);
+                backdrop?.classList.toggle('is-visible', open);
+                toggle?.classList.toggle('is-active', open);
+                document.body.classList.toggle('nav-open', open);
+            } else {
+                // Desktop: sidebar sempre visível e sem overlay
+                sidebar.classList.add('is-open');
+                backdrop?.classList.remove('is-visible');
+                toggle?.classList.remove('is-active');
+                document.body.classList.remove('nav-open');
+            }
         };
 
-        const closeSidebar = () => {
-            sidebar?.classList.remove('is-open');
-            backdrop?.classList.remove('is-visible');
-            toggle?.classList.remove('is-active');
-            document.body.classList.remove('nav-open');
-        };
-
-        toggle?.addEventListener('click', () => {
+        const toggleSidebar = () => {
             const isOpen = sidebar?.classList.contains('is-open');
-            isOpen ? closeSidebar() : openSidebar();
-        });
+            setSidebarState(!isOpen);
+        };
 
-        closeBtn?.addEventListener('click', closeSidebar);
-        backdrop?.addEventListener('click', closeSidebar);
+        toggle?.addEventListener('click', toggleSidebar);
+
+        closeBtn?.addEventListener('click', () => setSidebarState(false));
+        backdrop?.addEventListener('click', () => setSidebarState(false));
 
         const navLinks = document.querySelectorAll('.sidebar-link');
         navLinks.forEach(link => {
             const linkRoute = link.dataset.route;
             if (linkRoute === route) link.classList.add('active');
-            link.addEventListener('click', closeSidebar);
+            link.addEventListener('click', () => setSidebarState(false));
         });
+
+        // Inicializa estado de acordo com viewport
+        setSidebarState(false);
+        mqMobile.addEventListener('change', () => setSidebarState(false));
 
         const closeDropdown = () => {
             if (!dropdown || !userChip) return;

@@ -224,6 +224,30 @@ function notify(message, type = 'info') {
     console.log(message);
 }
 
+function formatTimeLabel(date = new Date()) {
+    const pad = value => String(value).padStart(2, '0');
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function showSwalToast({ title, text, icon = 'success' }) {
+    if (window.Swal) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon,
+            title,
+            text,
+            showConfirmButton: false,
+            timer: 2400,
+            timerProgressBar: true,
+            background: '#0b0b11',
+            color: '#f3f4f6'
+        });
+        return;
+    }
+    notify(text || title, icon === 'success' ? 'success' : 'info');
+}
+
 async function confirmDelete() {
     if (window.Swal) {
         const result = await Swal.fire({
@@ -551,6 +575,10 @@ form.addEventListener("submit", async e => {
             closeDrawerPanel();
             editingId = null;
             drawerMode = 'create';
+            showSwalToast({
+                title: 'Protocolo finalizado',
+                text: `Finalizado às ${formatTimeLabel()}`
+            });
             return;
         }
 
@@ -574,6 +602,12 @@ form.addEventListener("submit", async e => {
         }
 
         await loadProtocols();
+        const actionTitle = isEditing ? 'Protocolo atualizado' : 'Protocolo cadastrado';
+        const actionVerb = isEditing ? 'Atualizado' : 'Registrado';
+        showSwalToast({
+            title: actionTitle,
+            text: `${actionVerb} às ${formatTimeLabel()}`
+        });
         form.reset();
         if (statusSelect) statusSelect.value = 'FINALIZADO';
         if (fimInput) fimInput.disabled = false;
@@ -780,6 +814,10 @@ editSave?.addEventListener("click", async () => {
 
         await loadProtocols();
         closeModal();
+        showSwalToast({
+            title: 'Protocolo atualizado',
+            text: `Atualizado às ${formatTimeLabel()}`
+        });
     } catch (err) {
         notify(err.message || "Erro ao salvar protocolo", 'error');
     }
@@ -864,6 +902,10 @@ finalizeConfirm?.addEventListener("click", async () => {
         }
         await loadProtocols();
         closeFinalizeModal();
+        showSwalToast({
+            title: 'Protocolo finalizado',
+            text: `Finalizado às ${formatTimeLabel()}`
+        });
     } catch (err) {
         notify(err.message || "Erro ao finalizar", 'error');
     }

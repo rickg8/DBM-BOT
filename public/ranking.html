@@ -113,39 +113,189 @@
       </header>
 
       <main class="page-content" id="mainContent">
-        <section class="hero">
-          <div>
-            <p class="eyebrow">Comparativo</p>
-            <h1>🏆 Ranking do Evento</h1>
-            <p class="lede">Veja os pilotos com mais horas acumuladas.</p>
+        <section class="panel ranking-hero">
+          <div class="hero-main">
+            <p class="eyebrow">Ranking · desempenho dos pilotos</p>
+            <h1>🏁 Ranking de Horas</h1>
+            <p class="lede">
+              Entenda rapidamente sua posição, distância para o topo e quanto
+              falta para alcançar a próxima meta.
+            </p>
+            <div class="hero-stats">
+              <div class="hero-stat">
+                <p class="muted">Sua posição</p>
+                <div class="hero-value" id="heroPosition">—</div>
+                <p class="muted" id="heroDelta">
+                  Fique ativo para entrar no Top 3
+                </p>
+              </div>
+              <div class="hero-stat">
+                <p class="muted">Horas acumuladas</p>
+                <div class="hero-value" id="heroHours">—</div>
+                <p class="muted">Soma de protocolos finalizados</p>
+              </div>
+              <div class="hero-stat">
+                <p class="muted">Distância do líder</p>
+                <div class="hero-value" id="heroGap">—</div>
+                <p class="muted">Baseado na posição atual</p>
+              </div>
+            </div>
             <div class="hero-actions">
-              <a class="pill" href="dashboard.html">Abrir dashboard</a>
+              <a class="pill" href="dashboard.html">Ver dashboard</a>
               <a class="pill ghost" href="index.html">Registrar protocolo</a>
             </div>
           </div>
-          <div class="hero-card">
-            <p class="muted">Atualizado</p>
-            <h3 class="hero-highlight">Ao vivo</h3>
-            <p class="muted">Dados carregados da API</p>
+          <div class="hero-meta">
+            <div class="live-status">
+              <span
+                class="status-light live"
+                id="liveDot"
+                aria-hidden="true"
+              ></span>
+              <div>
+                <p class="muted">Status</p>
+                <h3 id="liveLabel">Ao vivo</h3>
+              </div>
+            </div>
+            <div class="meta-block">
+              <p class="muted">Última atualização</p>
+              <h3 id="lastUpdated">—</h3>
+              <p class="muted" id="syncedState">Sincronizado com a API</p>
+            </div>
+            <div class="meta-block">
+              <p class="muted">Nome do ranking</p>
+              <h3 id="rankingName">Horas de voo</h3>
+              <p class="muted">Baseado em protocolos finalizados</p>
+            </div>
           </div>
         </section>
 
-        <section class="panel">
-          <div class="panel-header">
-            <h2>Ranking por horas</h2>
-            <div class="field-group" style="align-items: center">
-              <input
-                type="text"
-                id="rankingSearch"
-                placeholder="Buscar piloto"
-                aria-label="Buscar piloto no ranking"
-              />
-              <button class="pill" id="highlightMe">
-                Destacar meu usuário
-              </button>
-            </div>
+        <section class="panel ranking-filters" aria-label="Filtros do ranking">
+          <div class="filters-group">
+            <label class="field">
+              <span class="field-label">Buscar piloto</span>
+              <div class="input-with-icon">
+                <span class="icon" aria-hidden="true">🔎</span>
+                <input
+                  type="text"
+                  id="rankingSearch"
+                  placeholder="Digite nome ou ID"
+                  aria-label="Buscar piloto no ranking"
+                />
+              </div>
+            </label>
+            <label class="field">
+              <span class="field-label">Período</span>
+              <select id="periodFilter" aria-label="Filtrar por período">
+                <option value="all">Todo o período</option>
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="90d">Últimos 90 dias</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Ordenação</span>
+              <select id="sortFilter" aria-label="Ordenar ranking">
+                <option value="hours-desc">Mais horas primeiro</option>
+                <option value="hours-asc">Menos horas primeiro</option>
+                <option value="name-asc">Nome (A-Z)</option>
+              </select>
+            </label>
+            <label class="field checkbox-field" for="onlyMeToggle">
+              <span class="field-label">Mostrar apenas meu usuário</span>
+              <label class="switch">
+                <input type="checkbox" id="onlyMeToggle" />
+                <span class="slider" aria-hidden="true"></span>
+                <span class="sr-only"
+                  >Ativar para exibir apenas seu usuário</span
+                >
+              </label>
+            </label>
           </div>
-          <ol id="rankingList"></ol>
+          <div class="filters-actions">
+            <button
+              class="pill ghost"
+              id="refreshRanking"
+              aria-label="Atualizar ranking"
+            >
+              Atualizar
+            </button>
+          </div>
+        </section>
+
+        <section class="ranking-grid">
+          <div class="main-column">
+            <section class="panel top3-panel">
+              <div class="panel-header">
+                <h2>Top 3</h2>
+                <p class="muted small">
+                  Reconhecimento imediato de quem está liderando
+                </p>
+              </div>
+              <div
+                class="top3-grid"
+                id="topThree"
+                aria-label="Top 3 do ranking"
+              ></div>
+            </section>
+
+            <section class="panel ranking-panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Lista completa</h2>
+                  <p class="muted small">
+                    Posições, horas e progresso até o líder
+                  </p>
+                </div>
+                <div class="legend">
+                  <span class="legend-dot leader"></span>
+                  <span class="muted small">Baseado no líder</span>
+                </div>
+              </div>
+              <ol
+                id="rankingList"
+                class="ranking-list"
+                aria-label="Ranking de pilotos"
+              ></ol>
+            </section>
+          </div>
+
+          <aside
+            class="panel detail-panel"
+            aria-label="Detalhes do piloto selecionado"
+          >
+            <div class="detail-header">
+              <div
+                class="avatar avatar-lg"
+                id="detailAvatar"
+                aria-hidden="true"
+              ></div>
+              <div>
+                <p class="muted">Piloto</p>
+                <h3 id="detailName">Selecione um piloto</h3>
+                <p class="muted small" id="detailId">ID —</p>
+              </div>
+            </div>
+            <div class="detail-stats">
+              <div class="detail-stat">
+                <p class="muted small">Horas totais</p>
+                <h3 id="detailHours">—</h3>
+                <p class="muted small" id="detailShare">—</p>
+              </div>
+              <div class="detail-stat">
+                <p class="muted small">Posição</p>
+                <h3 id="detailPosition">—</h3>
+                <p class="muted small" id="detailDelta">—</p>
+              </div>
+            </div>
+            <div class="detail-meta">
+              <p class="muted small">Última atualização</p>
+              <p id="detailUpdated">—</p>
+              <p class="muted small">
+                Clique em um piloto para ver mais detalhes
+              </p>
+            </div>
+          </aside>
         </section>
       </main>
     </div>

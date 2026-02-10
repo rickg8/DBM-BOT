@@ -109,8 +109,12 @@
         const role = roleLabel(session?.role);
         const sidebarName = document.getElementById('sidebarUsername');
         const sidebarRole = document.getElementById('sidebarRole');
+        const topbarName = document.getElementById('topbarName');
+        const topbarRole = document.getElementById('topbarRole');
         if (sidebarName) sidebarName.textContent = name;
         if (sidebarRole) sidebarRole.textContent = role || 'Conectado';
+        if (topbarName) topbarName.textContent = name;
+        if (topbarRole) topbarRole.textContent = role || 'Conectado';
 
         applyAvatar(document.getElementById('sidebarAvatar'), session);
         applyAvatar(document.getElementById('topbarAvatar'), session);
@@ -125,7 +129,7 @@
         const backdrop = document.getElementById('sidebarBackdrop');
         const toggle = document.getElementById('sidebarToggle');
         const closeBtn = document.getElementById('sidebarClose');
-        const avatarBtn = document.getElementById('topbarAvatarBtn');
+        const userChip = document.getElementById('topbarUserChip');
         const dropdown = document.getElementById('userDropdown');
         const logoutAction = document.getElementById('logoutAction');
 
@@ -155,21 +159,21 @@
         });
 
         const closeDropdown = () => {
-            if (!dropdown || !avatarBtn) return;
+            if (!dropdown || !userChip) return;
             dropdown.classList.remove('open');
-            avatarBtn.setAttribute('aria-expanded', 'false');
+            userChip.setAttribute('aria-expanded', 'false');
         };
 
-        avatarBtn?.addEventListener('click', (e) => {
+        userChip?.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = dropdown?.classList.contains('open');
             dropdown?.classList.toggle('open', !isOpen);
-            avatarBtn.setAttribute('aria-expanded', (!isOpen).toString());
+            userChip.setAttribute('aria-expanded', (!isOpen).toString());
         });
 
         document.addEventListener('click', (e) => {
-            if (!dropdown || !avatarBtn) return;
-            if (dropdown.contains(e.target) || avatarBtn.contains(e.target)) return;
+            if (!dropdown || !userChip) return;
+            if (dropdown.contains(e.target) || userChip.contains(e.target)) return;
             closeDropdown();
         });
 

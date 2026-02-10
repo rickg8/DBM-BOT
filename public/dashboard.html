@@ -12,7 +12,7 @@
   <body class="app-shell dashboard-page" data-route="dashboard">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-mark">DBM</span>
+        <img src="assets/imgs/DBMlogo.png" alt="Logo DBM" class="brand-logo" />
         <div>
           <div class="brand-title">Bombeiros RevoadaRJ</div>
           <div class="brand-sub">Patrulha</div>
@@ -78,17 +78,24 @@
           <a class="pill" href="index.html">+ Registrar novo</a>
           <div class="avatar-menu">
             <button
-              class="avatar-button"
-              id="topbarAvatarBtn"
+              class="user-chip"
+              id="topbarUserChip"
               aria-label="Abrir menu do usuário"
               aria-haspopup="menu"
               aria-expanded="false"
             >
               <div
-                class="avatar avatar-sm"
+                class="avatar avatar-sm avatar-status"
                 id="topbarAvatar"
                 aria-hidden="true"
-              ></div>
+              >
+                <span class="status-dot" aria-hidden="true"></span>
+              </div>
+              <div class="user-chip-meta">
+                <span class="user-chip-name" id="topbarName">Usuário</span>
+                <span class="user-chip-role" id="topbarRole">Conectado</span>
+              </div>
+              <span class="chip-caret">▾</span>
             </button>
             <div class="dropdown-menu" id="userDropdown" role="menu">
               <button class="dropdown-item" id="logoutAction">Sair</button>

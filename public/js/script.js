@@ -196,6 +196,10 @@ function isNonCounting(status) {
     return NON_COUNT_STATUSES.includes((status || '').toUpperCase());
 }
 
+function isFinalized(protocol) {
+    return (protocol?.status || 'FINALIZADO').toUpperCase() === 'FINALIZADO';
+}
+
 // calcula duração considerando virada de dia
 function calculateDuration(date, start, end) {
     const startTime = new Date(`${date}T${start}`);

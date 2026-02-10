@@ -107,7 +107,7 @@ select:focus-visible,
   z-index: 20;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: end;
   gap: 10px;
   padding: 12px 18px;
   background: rgba(10, 12, 18, 0.85);
@@ -416,6 +416,21 @@ select:focus-visible,
 
 .avatar-status {
   position: relative;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #111;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text);
 }
 
 .avatar-status .status-dot {
@@ -943,11 +958,20 @@ table {
   border-radius: 8px;
   scrollbar-color: #6b7280 #0f0f10;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .data-table {
   min-width: 720px;
   table-layout: fixed;
+}
+
+.data-table th,
+.data-table td,
+.fancy-table th,
+.fancy-table td {
+  white-space: nowrap;
 }
 
 .table-scroll::-webkit-scrollbar {
@@ -1368,66 +1392,6 @@ tbody tr:nth-child(even):not(.row-open) {
     align-items: center;
     justify-content: center;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
-
-  .table-scroll {
-    overflow: visible;
-    border: none;
-  }
-
-  .data-table,
-  .fancy-table {
-    border-collapse: separate;
-    border-spacing: 0;
-  }
-
-  .data-table thead,
-  .fancy-table thead {
-    display: none;
-  }
-
-  .data-table tr,
-  .fancy-table tr {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 12px;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.02);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  }
-
-  .data-table td,
-  .fancy-table td {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 0;
-    font-size: 0.95rem;
-    border: none;
-    background: transparent;
-  }
-
-  .data-table td::before,
-  .fancy-table td::before {
-    content: attr(data-label);
-    color: var(--muted);
-    font-size: 0.85rem;
-    min-width: 110px;
-    display: inline-block;
-  }
-
-  .data-table tr.total-row,
-  .fancy-table tr.total-row {
-    grid-template-columns: 1fr;
-    text-align: left;
-  }
-
-  .data-table tr.total-row td::before,
-  .fancy-table tr.total-row td::before {
-    min-width: 0;
   }
 }
 

@@ -3,6 +3,17 @@ const chartDays = document.getElementById("chartDays");
 const topPilotsBody = document.getElementById("topPilots");
 const recentBody = document.getElementById("recentProtocols");
 const heroTotal = document.getElementById("heroTotal");
+const statusTotalEl = document.getElementById("statusTotal");
+const statusFinalizedEl = document.getElementById("statusFinalized");
+const statusOpenEl = document.getElementById("statusOpen");
+const statusWarningsEl = document.getElementById("statusWarnings");
+const highlightPilotName = document.getElementById("highlightPilotName");
+const highlightPilotMeta = document.getElementById("highlightPilotMeta");
+const highlightHoursEl = document.getElementById("highlightHours");
+const highlightProtocolsEl = document.getElementById("highlightProtocols");
+const highlightLastDateEl = document.getElementById("highlightLastDate");
+const highlightProfileLink = document.getElementById("highlightProfileLink");
+const highlightNoteEl = document.getElementById("highlightNote");
 const NON_COUNT_STATUSES = ['ADVERTENCIA', 'NAO PARTICIPANDO', 'INATIVO'];
 let cachedProtocols = [];
 let filteredProtocols = [];
@@ -97,10 +108,88 @@ function renderDiscordLink(link) {
             </a>`;
 }
 
-function formatDateDisplay(dateStr) {
-    if (!dateStr || !dateStr.includes('-')) return dateStr || '';
-    const [y, m, d] = dateStr.split('-');
-    return `${d}/${m}/${y}`;
+function addDays(date, amount) {
+    const clone = new Date(date);
+    clone.setDate(clone.getDate() + amount);
+    return clone;
+}
+
+function toIsoDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function getPeriodBounds(protocols) {
+    const dates = protocols
+        .map(p => p.data)
+        .filter(Boolean)
+        .sort();
+    if (!dates.length) return null;
+    const lastDate = new Date(dates[dates.length - 1]);
+    lastDate.setHours(0, 0, 0, 0);
+    const currentStart = addDays(lastDate, -6);
+    const previousEnd = addDays(currentStart, -1);
+    const previousStart = addDays(previousEnd, -6);
+    return {
+        currentStart,
+        currentEnd: lastDate,
+        previousStart,
+        previousEnd
+    };
+}
+
+function getTotalsInRange(protocols, startDate, endDate) {
+    if (!startDate || !endDate) return null;
+    const start = toIsoDate(startDate);
+    const end = toIsoDate(endDate);
+    const totals = {
+        protocols: 0,
+        hours: 0,
+        active: 0,
+        nonCount: 0
+    };
+    const pilots = new Set();
+    protocols.forEach(p => {
+        if (!p.data) return;
+        if (p.data >= start && p.data <= end) {
+            totals.protocols += 1;
+            pilots.add(p.piloto);
+            const duration = Number(p.duracao) || 0;
+            totals.hours += duration;
+            if (isNonCounting(p.status)) {
+                totals.nonCount += 1;
+            }
+        }
+    });
+    totals.active = pilots.size;
+    return totals;
+}
+
+function buildTrend(current, previous, { isPercent = false } = {}) {
+    if (current == null || previous == null) {
+        return { arrow: '➖', label: '', tone: 'muted' };
+    }
+    const diff = current - previous;
+    if (diff === 0) {
+        return { arrow: '➖', label: '0', tone: 'muted' };
+    }
+    const sign = diff > 0 ? '+' : '-';
+    const arrow = diff > 0 ? '⬆️' : '⬇️';
+    let label;
+    if (isPercent) {
+        const rate = previous ? Math.round((Math.abs(diff) / previous) * 100) : Math.abs(diff);
+        label = `${sign}${rate}${previous ? '%' : ''}`;
+    } else {
+        label = `${sign}${Math.abs(diff)}`;
+    }
+    const tone = diff > 0 ? 'positive' : 'negative';
+    return { arrow, label, tone };
+}
+
+function renderStatusCard(total, finalized, open, warnings) {
+    if (statusTotalEl) statusTotalEl.textContent = total ?? '0';
+    if (statusFinalizedEl) statusFinalizedEl.textContent = finalized ?? '0';
+    if (statusOpenEl) statusOpenEl.textContent = open ?? '0';
+    if (statusWarningsEl) statusWarningsEl.textContent = warnings ?? '0';
 }
 
 function renderSummary(protocols) {
@@ -108,29 +197,63 @@ function renderSummary(protocols) {
     const finalized = protocols.filter(p => (p.status || 'FINALIZADO').toUpperCase() === 'FINALIZADO');
     const openCount = protocols.filter(p => (p.status || 'FINALIZADO').toUpperCase() === 'ABERTO').length;
     const nonCountingCount = protocols.filter(p => isNonCounting(p.status)).length;
-    const totalSeconds = finalized.reduce((s, p) => s + p.duracao, 0);
-    const avgSeconds = finalized.length ? Math.round(totalSeconds / finalized.length) : 0;
+    const totalSeconds = finalized.reduce((s, p) => s + (p.duracao || 0), 0);
     const uniquePilots = new Set(protocols.map(p => p.piloto)).size;
 
     if (heroTotal) {
         heroTotal.textContent = totalProtocols;
     }
 
-    const cards = [
-        { title: "Protocolos", value: totalProtocols },
-        { title: "Horas totais", value: formatDuration(totalSeconds) },
-        { title: "Média por protocolo", value: formatDuration(avgSeconds) },
-        { title: "Pilotos ativos", value: uniquePilots },
-        { title: "Abertos", value: openCount },
-        { title: "Não contabilizados", value: nonCountingCount }
+    renderStatusCard(totalProtocols, finalized.length, openCount, nonCountingCount);
+
+    const bounds = getPeriodBounds(protocols);
+    const currentTotals = bounds ? getTotalsInRange(protocols, bounds.currentStart, bounds.currentEnd) : null;
+    const previousTotals = bounds ? getTotalsInRange(protocols, bounds.previousStart, bounds.previousEnd) : null;
+
+    const metrics = [
+        {
+            icon: "📄",
+            label: "Protocolos",
+            value: totalProtocols,
+            trend: buildTrend(currentTotals?.protocols, previousTotals?.protocols)
+        },
+        {
+            icon: "⏱️",
+            label: "Horas",
+            value: formatDuration(totalSeconds),
+            trend: buildTrend(currentTotals?.hours, previousTotals?.hours, { isPercent: true })
+        },
+        {
+            icon: "👥",
+            label: "Ativos",
+            value: uniquePilots,
+            trend: buildTrend(currentTotals?.active, previousTotals?.active)
+        },
+        {
+            icon: "⚠️",
+            label: "Não cont.",
+            value: nonCountingCount,
+            trend: buildTrend(currentTotals?.nonCount, previousTotals?.nonCount)
+        }
     ];
 
-    summaryCards.innerHTML = cards.map(c => `
-    <div class="card">
-      <div class="card-title">${c.title}</div>
-      <div class="card-value">${c.value}</div>
-    </div>
-  `).join("");
+    if (!summaryCards) return;
+
+    summaryCards.innerHTML = metrics
+        .map(metric => `
+      <article class="summary-card">
+        <span class="summary-icon" aria-hidden="true">${metric.icon}</span>
+        <div class="summary-body">
+          <p class="summary-label">${metric.label}</p>
+          <p class="summary-value">${metric.value ?? '—'}</p>
+        </div>
+        <div class="summary-trend ${metric.trend.tone}">
+          <span aria-hidden="true">${metric.trend.arrow}</span>
+          <span>${metric.trend.label || '—'}</span>
+        </div>
+      </article>
+    `)
+        .join("");
 }
 
 function renderDays(protocols) {
@@ -165,7 +288,7 @@ function renderTopPilots(protocols, pilotColors) {
     const finalized = protocols.filter(p => (p.status || 'FINALIZADO').toUpperCase() === 'FINALIZADO');
     if (!finalized.length) {
         topPilotsBody.innerHTML = '<tr><td colspan="6" class="muted">Nenhum dado.</td></tr>';
-        return;
+        return [];
     }
     const groups = finalized.reduce((acc, p) => {
         const g = acc[p.piloto] || { segundos: 0, count: 0, last: null, link: null };
@@ -180,21 +303,76 @@ function renderTopPilots(protocols, pilotColors) {
     }, {});
 
     const sorted = Object.entries(groups).sort((a, b) => b[1].segundos - a[1].segundos).slice(0, 8);
-
-    topPilotsBody.innerHTML = sorted.map(([piloto, info]) => {
+    const medals = ['🥇', '🥈', '🥉'];
+    const entryList = sorted.map(([piloto, info], index) => {
         const media = info.count ? Math.round(info.segundos / info.count) : 0;
         const color = pilotColors[piloto] || "#4b5563";
-        return `
-      <tr>
-                <td data-label="Piloto"><span class="pilot-badge" style="background:${color}">${piloto}</span></td>
-                <td data-label="Protocolos">${info.count}</td>
-                <td data-label="Horas">${formatDuration(info.segundos)}</td>
-                <td data-label="Média">${formatDuration(media)}</td>
-                        <td data-label="Último">${info.last ? formatDateDisplay(info.last.data) : '-'}</td>
-                        <td data-label="Link">${renderDiscordLink(info.link)}</td>
-      </tr>
-    `;
-    }).join("");
+        const medal = medals[index] || '';
+        const position = index + 1;
+        const profileUrl = `ranking.html?piloto=${encodeURIComponent(piloto)}`;
+        const tooltip = `${position}º lugar • ${info.count} protocolos • Média ${formatDuration(media)}`;
+        return {
+            piloto,
+            info,
+            color,
+            medal,
+            media,
+            profileUrl,
+            position,
+            tooltip
+        };
+    });
+
+    topPilotsBody.innerHTML = entryList.map(entry => `
+        <tr>
+            <td data-label="Piloto">
+                <a class="pilot-link" href="${entry.profileUrl}" title="${entry.tooltip}">
+                    ${entry.medal ? `<span class="medal-icon" aria-hidden="true">${entry.medal}</span>` : ''}
+                    <span class="pilot-badge" style="background:${entry.color}">${entry.piloto}</span>
+                </a>
+            </td>
+            <td data-label="Protocolos">${entry.info.count}</td>
+            <td data-label="Horas">${formatDuration(entry.info.segundos)}</td>
+            <td data-label="Média">${formatDuration(entry.media)}</td>
+            <td data-label="Último">${entry.info.last ? formatDateDisplay(entry.info.last.data) : '-'}</td>
+            <td data-label="Link">${renderDiscordLink(entry.info.link)}</td>
+        </tr>
+    `).join("");
+
+    return entryList;
+}
+
+function renderHighlight(entries) {
+    if (!entries?.length) {
+        if (highlightPilotName) highlightPilotName.textContent = '—';
+        if (highlightPilotMeta) highlightPilotMeta.textContent = 'Aguardando dados';
+        if (highlightHoursEl) highlightHoursEl.textContent = '—';
+        if (highlightProtocolsEl) highlightProtocolsEl.textContent = '—';
+        if (highlightLastDateEl) highlightLastDateEl.textContent = '—';
+        highlightProfileLink?.setAttribute('aria-disabled', 'true');
+        highlightProfileLink?.removeAttribute('href');
+        if (highlightNoteEl) highlightNoteEl.textContent = 'Ainda sem destaque.';
+        return;
+    }
+
+    const leader = entries[0];
+    highlightPilotName && (highlightPilotName.textContent = leader.piloto);
+    if (highlightPilotMeta) {
+        const badge = leader.medal ? `${leader.medal} ` : '';
+        highlightPilotMeta.textContent = `${badge}${leader.position}º • ${leader.info.count} protocolos`;
+    }
+    highlightHoursEl && (highlightHoursEl.textContent = formatDuration(leader.info.segundos));
+    highlightProtocolsEl && (highlightProtocolsEl.textContent = `${leader.info.count} protocolos`);
+    highlightLastDateEl && (highlightLastDateEl.textContent = leader.info.last ? formatDateDisplay(leader.info.last.data) : '—');
+    if (highlightProfileLink) {
+        highlightProfileLink.href = leader.profileUrl;
+        highlightProfileLink.removeAttribute('aria-disabled');
+    }
+    if (highlightNoteEl) {
+        highlightNoteEl.textContent = leader.info.last
+            ? `Último protocolo em ${formatDateDisplay(leader.info.last.data)}`
+            : 'Atualizado agora';
+    }
 }
 
 function renderRecent(protocols, pilotColors) {
@@ -243,7 +421,8 @@ function applyDashboardFilters(pilotColors) {
     const list = filteredProtocols.length ? filteredProtocols : cachedProtocols;
     renderSummary(list);
     renderDays(list);
-    renderTopPilots(list, pilotColors);
+    const topEntries = renderTopPilots(list, pilotColors);
+    renderHighlight(topEntries);
     renderRecent(list, pilotColors);
 }
 
@@ -260,6 +439,7 @@ function showSkeletons() {
     if (recentBody) {
         recentBody.innerHTML = '<tr><td colspan="6"><div class="skeleton skeleton-line"></div></td></tr>';
     }
+    renderHighlight([]);
 }
 
 function showErrorState(msg) {

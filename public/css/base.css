@@ -321,7 +321,7 @@ select:focus-visible,
 
 .sidebar-link.active {
   background: linear-gradient(135deg, var(--primary), var(--primary-alt));
-  color: #0b0b0b;
+  color: #fff;
   box-shadow: var(--glow);
   border-color: transparent;
 }
@@ -1964,7 +1964,7 @@ a.link:hover {
 
 .chip.active {
   background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-  color: #0b0b0b;
+  color: #fff;
   border-color: transparent;
   box-shadow: var(--glow);
 }

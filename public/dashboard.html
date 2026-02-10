@@ -117,7 +117,7 @@
 
       <main class="page-content" id="mainContent">
         <section class="hero">
-          <div>
+          <div class="hero-copy">
             <p class="eyebrow">Visão geral</p>
             <h1>📊 Painel do evento</h1>
             <p class="lede">
@@ -129,10 +129,32 @@
               <a class="pill ghost" href="index.html">Registrar protocolo</a>
             </div>
           </div>
-          <div class="hero-card">
-            <p class="muted">Status</p>
-            <h3 class="hero-highlight" id="heroTotal">–</h3>
-            <p class="muted">Protocolos lançados</p>
+          <div class="hero-cards">
+            <div class="hero-card hero-status-card">
+              <div class="status-card-header">
+                <p class="muted">Status</p>
+                <h3 class="hero-highlight" id="heroTotal">–</h3>
+                <p class="muted">Protocolos lançados</p>
+              </div>
+              <div class="status-breakdown">
+                <div class="status-item">
+                  <span>Total</span>
+                  <strong id="statusTotal">–</strong>
+                </div>
+                <div class="status-item">
+                  <span class="status-label">✔️ Finalizados</span>
+                  <strong id="statusFinalized">–</strong>
+                </div>
+                <div class="status-item">
+                  <span class="status-label">🟡 Abertos</span>
+                  <strong id="statusOpen">–</strong>
+                </div>
+                <div class="status-item">
+                  <span class="status-label">⚠️ Advertências</span>
+                  <strong id="statusWarnings">–</strong>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -162,7 +184,50 @@
               </div>
             </div>
           </div>
-          <div class="cards-grid" id="summaryCards"></div>
+          <div class="summary-grid" id="summaryCards"></div>
+        </section>
+
+        <section class="panel highlight-panel">
+          <div class="panel-header">
+            <h2>🏆 Destaque do mês</h2>
+            <p class="muted">Gamificação mantém o time engajado</p>
+          </div>
+          <div class="highlight-card" id="monthHighlight">
+            <div class="highlight-meta">
+              <span class="eyebrow">Piloto destaque</span>
+              <h3 id="highlightPilotName">—</h3>
+              <p class="muted" id="highlightPilotMeta">—</p>
+            </div>
+            <ul class="highlight-stats">
+              <li>
+                <span class="stat-icon">⏱️</span>
+                <div>
+                  <span class="stat-label">Horas</span>
+                  <strong id="highlightHours">—</strong>
+                </div>
+              </li>
+              <li>
+                <span class="stat-icon">📄</span>
+                <div>
+                  <span class="stat-label">Protocolos</span>
+                  <strong id="highlightProtocols">—</strong>
+                </div>
+              </li>
+              <li>
+                <span class="stat-icon">⏳</span>
+                <div>
+                  <span class="stat-label">Último protocolo</span>
+                  <strong id="highlightLastDate">—</strong>
+                </div>
+              </li>
+            </ul>
+            <div class="highlight-actions">
+              <a class="pill highlight-pill" id="highlightProfileLink" href="#"
+                >Ver perfil</a
+              >
+              <span class="muted" id="highlightNote">Atualizado agora</span>
+            </div>
+          </div>
         </section>
 
         <section class="panel">
